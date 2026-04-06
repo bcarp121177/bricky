@@ -86,7 +86,7 @@ export default function CameraUpload({
           </p>
 
           <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
-            <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-full cursor-pointer hover:bg-yellow-500 transition-colors">
+            <label onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-2 px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-full cursor-pointer hover:bg-yellow-500 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -111,7 +111,7 @@ export default function CameraUpload({
                 className="hidden"
               />
             </label>
-            <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-full cursor-pointer hover:border-yellow-400 transition-colors">
+            <label onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-full cursor-pointer hover:border-yellow-400 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
