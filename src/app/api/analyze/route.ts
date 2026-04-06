@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { generateLDraw } from "@/lib/ldraw-generator";
+import { writeFileSync } from "fs";
+import { join } from "path";
+import stubData from "@/lib/stub-response.json";
 
 const anthropic = new Anthropic();
 
@@ -30,7 +34,7 @@ interface RebrickablePart {
 
 async function identifyPieces(imageBuffer: Buffer): Promise<BrickognizeItem[]> {
   const formData = new FormData();
-  formData.append("query_image", new Blob([new Uint8Array(imageBuffer)]), "image.jpg");
+  formData.append("query_image", new Blob([new Uint8Array(imageBuffer)], { type: "image/jpeg" }), "image.jpg");
 
   const response = await fetch("https://api.brickognize.com/predict/parts/", {
     method: "POST",
@@ -63,6 +67,13 @@ async function enrichPart(partNum: string): Promise<RebrickablePart | null> {
 
 export async function POST(request: NextRequest) {
   try {
+    // Dev stub: set USE_STUB=true in .env.local to skip API calls
+    if (process.env.USE_STUB === "true") {
+      await new Promise((r) => setTimeout(r, 800)); // simulate latency
+      const ldraw = generateLDraw(stubData.pieces, stubData.build.steps);
+      return NextResponse.json({ ...stubData, ldraw, identifiedPieces: [] });
+    }
+
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
 
@@ -206,11 +217,26 @@ Important guidelines:
       );
     }
 
+    const ldraw = generateLDraw(buildInstructions.pieces, buildInstructions.build.steps);
+
+    if (process.env.CAPTURE_RESPONSE === "true") {
+      const capture = {
+        pieces: buildInstructions.pieces,
+        build: buildInstructions.build,
+        tips: buildInstructions.tips,
+        alternateIdeas: buildInstructions.alternateIdeas,
+      };
+      const stubPath = join(process.cwd(), "src/lib/stub-response.json");
+      writeFileSync(stubPath, JSON.stringify(capture, null, 2));
+      console.log("✅ stub-response.json updated from live response");
+    }
+
     return NextResponse.json({
       pieces: buildInstructions.pieces,
       build: buildInstructions.build,
       tips: buildInstructions.tips,
       alternateIdeas: buildInstructions.alternateIdeas,
+      ldraw,
       identifiedPieces: enrichedPieces,
     });
   } catch (error) {

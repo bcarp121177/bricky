@@ -1,0 +1,57 @@
+{
+  "pieces": [
+    { "name": "2x4 Brick", "color": "Red", "quantity": 4, "partNum": "3001" },
+    { "name": "2x2 Brick", "color": "Blue", "quantity": 2, "partNum": "3003" },
+    { "name": "2x4 Plate", "color": "Yellow", "quantity": 2, "partNum": "3020" },
+    { "name": "1x2 Brick", "color": "White", "quantity": 4, "partNum": "3004" },
+    { "name": "2x2 Plate", "color": "Green", "quantity": 2, "partNum": "3022" }
+  ],
+  "build": {
+    "title": "Little Cabin",
+    "description": "A cozy two-room cabin with a bright yellow floor and red walls. Perfect for a minifigure getaway!",
+    "difficulty": "Easy",
+    "estimatedTime": "5-8 minutes",
+    "steps": [
+      {
+        "stepNumber": 1,
+        "instruction": "Lay the two yellow 2x4 plates side by side to form the cabin floor.",
+        "piecesUsed": ["2x Yellow 2x4 Plate"]
+      },
+      {
+        "stepNumber": 2,
+        "instruction": "Place the two green 2x2 plates at each end of the floor as corner foundations.",
+        "piecesUsed": ["2x Green 2x2 Plate"]
+      },
+      {
+        "stepNumber": 3,
+        "instruction": "Build the front and back walls by placing two red 2x4 bricks along the long edges of the floor.",
+        "piecesUsed": ["2x Red 2x4 Brick"]
+      },
+      {
+        "stepNumber": 4,
+        "instruction": "Add the remaining two red 2x4 bricks on top of the first wall layer to raise the walls.",
+        "piecesUsed": ["2x Red 2x4 Brick"]
+      },
+      {
+        "stepNumber": 5,
+        "instruction": "Place the two blue 2x2 bricks at the corners to reinforce the walls and add a pop of color.",
+        "piecesUsed": ["2x Blue 2x2 Brick"]
+      },
+      {
+        "stepNumber": 6,
+        "instruction": "Fill in the side walls with the four white 1x2 bricks, two per side, to close off the cabin.",
+        "piecesUsed": ["4x White 1x2 Brick"]
+      }
+    ]
+  },
+  "tips": [
+    "Offset each brick layer by one stud for a stronger, more realistic wall.",
+    "Try swapping the yellow plates for tan ones for a more natural wooden-floor look.",
+    "You can add a sloped piece on top as a roof if you have one handy."
+  ],
+  "alternateIdeas": [
+    "A small swimming pool — lay the plates flat as the pool floor and stack the bricks around the edge.",
+    "A colorful park bench — use the 2x4 plates as seat and back, with 1x2 bricks as legs.",
+    "A tiny race car — use the 2x4 bricks as the body and the plates as a flat spoiler."
+  ]
+}

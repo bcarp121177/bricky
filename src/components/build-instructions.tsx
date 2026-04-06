@@ -1,6 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
+
+const LDrawViewer = dynamic(() => import("./ldraw-viewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-sm text-gray-400" style={{ height: 300 }}>
+      Loading 3D viewer…
+    </div>
+  ),
+});
 
 interface Piece {
   name: string;
@@ -28,6 +38,7 @@ interface BuildResult {
   build: Build;
   tips: string[];
   alternateIdeas: string[];
+  ldraw?: string | null;
 }
 
 interface BuildInstructionsProps {
@@ -48,7 +59,7 @@ export default function BuildInstructions({
   const [currentStep, setCurrentStep] = useState(0);
   const [showAllSteps, setShowAllSteps] = useState(false);
 
-  const { pieces, build, tips, alternateIdeas } = result;
+  const { pieces, build, tips, alternateIdeas, ldraw } = result;
   const totalSteps = build.steps.length;
 
   return (
@@ -92,6 +103,16 @@ export default function BuildInstructions({
           ))}
         </div>
       </div>
+
+      {/* 3D viewer */}
+      {ldraw && !showAllSteps && (
+        <div className="space-y-1">
+          <p className="text-xs text-gray-400 text-center">
+            3D preview — drag to rotate, scroll to zoom
+          </p>
+          <LDrawViewer ldrawContent={ldraw} currentStep={currentStep} />
+        </div>
+      )}
 
       {/* Step-by-step instructions */}
       <div className="bg-white rounded-2xl border-2 border-yellow-400 overflow-hidden">
