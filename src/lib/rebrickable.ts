@@ -28,8 +28,7 @@ function toPartRecord(part: RebrickablePart): PartRecord {
   return {
     partNum:  part.part_num,
     name:     part.name,
-    imgUrl:   part.part_img_url ??
-              `https://cdn.rebrickable.com/media/parts/photos/${part.part_num}.jpg`,
+    imgUrl:   part.part_img_url ?? "",
     category,
   };
 }

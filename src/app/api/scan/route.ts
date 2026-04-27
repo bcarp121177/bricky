@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const stubResult: ScanResult = {
       partNum:    "3001",
       name:       "Brick 2x4",
-      imgUrl:     "https://cdn.rebrickable.com/media/parts/photos/3001.jpg",
+      imgUrl:     "https://cdn.rebrickable.com/media/parts/elements/300121.jpg",
       confidence: 0.97,
     };
     return Response.json({ result: stubResult });

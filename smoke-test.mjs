@@ -198,6 +198,25 @@ async function run() {
     const chipCount = await pieceChips.count();
     assert(chipCount > 0, `Piece chips render on step 1 (found ${chipCount})`);
 
+    // Piece chip images — verify every <img> inside a chip has a non-empty src
+    // (gray placeholder boxes indicate the imgUrl is empty/broken)
+    const chipImgs = page.locator('.flex.items-center.gap-1\\.5.bg-gray-50 img');
+    const chipImgCount = await chipImgs.count();
+    if (chipImgCount > 0) {
+      let allHaveSrc = true;
+      for (let i = 0; i < chipImgCount; i++) {
+        const src = await chipImgs.nth(i).getAttribute('src');
+        if (!src || src.trim() === '') {
+          allHaveSrc = false;
+          console.error(`    chip img[${i}] has empty src`);
+        }
+      }
+      assert(allHaveSrc, `All ${chipImgCount} piece chip image(s) have non-empty src attributes`);
+    } else {
+      // No <img> at all means every chip fell back to the gray placeholder — that's a failure
+      assert(false, 'Piece chip images: expected at least one <img> element (gray placeholders shown instead)');
+    }
+
     // Next button
     const nextBtn = page.locator('button:has-text("Next →")');
     const nextVisible = await nextBtn.isVisible().catch(() => false);
