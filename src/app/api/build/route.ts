@@ -4,8 +4,7 @@ import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import stubData from "@/lib/stub-response.json";
 import type { BuildRequest, BuildResponse } from "@/lib/types";
-import { validatePlacements } from "@/lib/validator";
-import type { Violation } from "@/lib/validator";
+import { validatePlacements, type Violation } from "@/lib/validator";
 
 const anthropic = new Anthropic();
 
@@ -173,8 +172,6 @@ ${body.pieces.map((p) => `${p.partNum} ${p.name} ${p.color}`).join("\n")}`,
       { role: "user", content: buildUserMessage(body) },
     ];
 
-    let buildResponse: BuildResponse | null = null;
-
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       const genMsg = await anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
@@ -213,8 +210,21 @@ ${body.pieces.map((p) => `${p.partNum} ${p.name} ${p.color}`).join("\n")}`,
       const validationResult = validatePlacements(parsed, body.pieces);
 
       if (validationResult.valid) {
-        buildResponse = parsed;
-        break;
+        // Enrich imgUrls server-side so piece chips always show real images
+        enrichImgUrls(parsed, body.pieces);
+
+        // CAPTURE_RESPONSE: persist live response as new stub
+        if (process.env.CAPTURE_RESPONSE === "true") {
+          try {
+            const stubPath = join(process.cwd(), "src/lib/stub-response.json");
+            writeFileSync(stubPath, JSON.stringify(parsed, null, 2));
+            console.log("stub-response.json updated from live response");
+          } catch (e) {
+            console.warn("Could not write stub-response.json:", e);
+          }
+        }
+
+        return Response.json(parsed);
       }
 
       // Violations found — if we've exhausted all attempts, return hard error.
@@ -241,24 +251,12 @@ ${body.pieces.map((p) => `${p.partNum} ${p.name} ${p.color}`).join("\n")}`,
       );
     }
 
-    // buildResponse is guaranteed non-null here (loop always sets it or returns early).
-    const finalResponse = buildResponse!;
-
-    // Enrich imgUrls server-side so piece chips always show real images
-    enrichImgUrls(finalResponse, body.pieces);
-
-    // CAPTURE_RESPONSE: persist live response as new stub
-    if (process.env.CAPTURE_RESPONSE === "true") {
-      try {
-        const stubPath = join(process.cwd(), "src/lib/stub-response.json");
-        writeFileSync(stubPath, JSON.stringify(finalResponse, null, 2));
-        console.log("stub-response.json updated from live response");
-      } catch (e) {
-        console.warn("Could not write stub-response.json:", e);
-      }
-    }
-
-    return Response.json(finalResponse);
+    // This line is unreachable — the loop always returns on the final attempt.
+    // TypeScript requires a return here to satisfy exhaustive flow analysis.
+    return Response.json(
+      { error: "Could not generate valid placements after 3 attempts" },
+      { status: 500 }
+    );
   } catch (error) {
     console.error("Build error:", error);
     return Response.json({ error: "Failed to generate build suggestions" }, { status: 500 });
