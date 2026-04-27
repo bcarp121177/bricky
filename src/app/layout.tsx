@@ -13,14 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bricky — LEGO Building Assistant",
+  title: "Bricky — Build Something Amazing",
   description:
-    "Take a photo of your LEGO pieces and get AI-powered building instructions",
+    "Add your LEGO pieces, pick a theme, and get step-by-step building instructions powered by AI. Free and fun for all ages!",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Bricky",
+  },
+  openGraph: {
+    title: "Bricky — Build Something Amazing",
+    description: "AI-powered LEGO building instructions for your pieces.",
+    siteName: "Bricky",
+    locale: "en_US",
+    type: "website",
   },
 };
 

@@ -1,57 +1,194 @@
 {
-  "pieces": [
-    { "name": "2x4 Brick", "color": "Red", "quantity": 4, "partNum": "3001" },
-    { "name": "2x2 Brick", "color": "Blue", "quantity": 2, "partNum": "3003" },
-    { "name": "2x4 Plate", "color": "Yellow", "quantity": 2, "partNum": "3020" },
-    { "name": "1x2 Brick", "color": "White", "quantity": 4, "partNum": "3004" },
-    { "name": "2x2 Plate", "color": "Green", "quantity": 2, "partNum": "3022" }
-  ],
-  "build": {
-    "title": "Little Cabin",
-    "description": "A cozy two-room cabin with a bright yellow floor and red walls. Perfect for a minifigure getaway!",
-    "difficulty": "Easy",
-    "estimatedTime": "5-8 minutes",
-    "steps": [
-      {
-        "stepNumber": 1,
-        "instruction": "Lay the two yellow 2x4 plates side by side to form the cabin floor.",
-        "piecesUsed": ["2x Yellow 2x4 Plate"]
-      },
-      {
-        "stepNumber": 2,
-        "instruction": "Place the two green 2x2 plates at each end of the floor as corner foundations.",
-        "piecesUsed": ["2x Green 2x2 Plate"]
-      },
-      {
-        "stepNumber": 3,
-        "instruction": "Build the front and back walls by placing two red 2x4 bricks along the long edges of the floor.",
-        "piecesUsed": ["2x Red 2x4 Brick"]
-      },
-      {
-        "stepNumber": 4,
-        "instruction": "Add the remaining two red 2x4 bricks on top of the first wall layer to raise the walls.",
-        "piecesUsed": ["2x Red 2x4 Brick"]
-      },
-      {
-        "stepNumber": 5,
-        "instruction": "Place the two blue 2x2 bricks at the corners to reinforce the walls and add a pop of color.",
-        "piecesUsed": ["2x Blue 2x2 Brick"]
-      },
-      {
-        "stepNumber": 6,
-        "instruction": "Fill in the side walls with the four white 1x2 bricks, two per side, to close off the cabin.",
-        "piecesUsed": ["4x White 1x2 Brick"]
-      }
-    ]
-  },
-  "tips": [
-    "Offset each brick layer by one stud for a stronger, more realistic wall.",
-    "Try swapping the yellow plates for tan ones for a more natural wooden-floor look.",
-    "You can add a sloped piece on top as a roof if you have one handy."
-  ],
-  "alternateIdeas": [
-    "A small swimming pool — lay the plates flat as the pool floor and stack the bricks around the edge.",
-    "A colorful park bench — use the 2x4 plates as seat and back, with 1x2 bricks as legs.",
-    "A tiny race car — use the 2x4 bricks as the body and the plates as a flat spoiler."
+  "suggestions": [
+    {
+      "title": "Little Rocket Ship",
+      "description": "Blast off! Build a red and blue rocket ready to zoom to the stars.",
+      "difficulty": 1,
+      "estimatedTime": "5–8 minutes",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "instruction": "Put two red 2x4 bricks side by side. This is the rocket body.",
+          "piecesUsed": [
+            {
+              "partNum": "3001",
+              "name": "Brick 2x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3001.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 2,
+          "instruction": "Stack two blue 2x2 bricks on top. The rocket is getting taller!",
+          "piecesUsed": [
+            {
+              "partNum": "3003",
+              "name": "Brick 2x2",
+              "color": "Bright Blue",
+              "colorHex": "#006CB7",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3003.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 3,
+          "instruction": "Place a yellow 2x4 plate on top as the launch pad base.",
+          "piecesUsed": [
+            {
+              "partNum": "3020",
+              "name": "Plate 2x4",
+              "color": "Bright Yellow",
+              "colorHex": "#F7D117",
+              "quantity": 1,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3020.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 4,
+          "instruction": "Add two white 1x2 bricks on the sides as rocket fins.",
+          "piecesUsed": [
+            {
+              "partNum": "3004",
+              "name": "Brick 1x2",
+              "color": "White",
+              "colorHex": "#F4F4F4",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3004.jpg"
+            }
+          ]
+        }
+      ],
+      "tips": [
+        "Press each brick down firmly so it clicks into place.",
+        "Try swapping the blue bricks for green ones for a different look."
+      ]
+    },
+    {
+      "title": "Tiny Castle Tower",
+      "description": "Build a sturdy little tower fit for a knight or a dragon!",
+      "difficulty": 2,
+      "estimatedTime": "8–12 minutes",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "instruction": "Lay two yellow 2x4 plates flat. This is the castle floor.",
+          "piecesUsed": [
+            {
+              "partNum": "3020",
+              "name": "Plate 2x4",
+              "color": "Bright Yellow",
+              "colorHex": "#F7D117",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3020.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 2,
+          "instruction": "Stack two red 2x4 bricks along each long side to make the walls.",
+          "piecesUsed": [
+            {
+              "partNum": "3001",
+              "name": "Brick 2x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3001.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 3,
+          "instruction": "Place blue 2x2 bricks at the corners to hold the walls together.",
+          "piecesUsed": [
+            {
+              "partNum": "3003",
+              "name": "Brick 2x2",
+              "color": "Bright Blue",
+              "colorHex": "#006CB7",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3003.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 4,
+          "instruction": "Fill the top with white 1x2 bricks for the tower battlements.",
+          "piecesUsed": [
+            {
+              "partNum": "3004",
+              "name": "Brick 1x2",
+              "color": "White",
+              "colorHex": "#F4F4F4",
+              "quantity": 4,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3004.jpg"
+            }
+          ]
+        }
+      ],
+      "tips": [
+        "Leave gaps between the top bricks to make real battlements.",
+        "Add a flag piece on top if you have one!"
+      ]
+    },
+    {
+      "title": "Colorful Park Bench",
+      "description": "A fun bench where minifigures can sit and watch the world go by.",
+      "difficulty": 1,
+      "estimatedTime": "3–5 minutes",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "instruction": "Place two white 1x2 bricks standing upright as the bench legs.",
+          "piecesUsed": [
+            {
+              "partNum": "3004",
+              "name": "Brick 1x2",
+              "color": "White",
+              "colorHex": "#F4F4F4",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3004.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 2,
+          "instruction": "Lay a yellow 2x4 plate across the top of the legs as the seat.",
+          "piecesUsed": [
+            {
+              "partNum": "3020",
+              "name": "Plate 2x4",
+              "color": "Bright Yellow",
+              "colorHex": "#F7D117",
+              "quantity": 1,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3020.jpg"
+            }
+          ]
+        },
+        {
+          "stepNumber": 3,
+          "instruction": "Add a red 2x4 brick at the back as the bench backrest.",
+          "piecesUsed": [
+            {
+              "partNum": "3001",
+              "name": "Brick 2x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 1,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/photos/3001.jpg"
+            }
+          ]
+        }
+      ],
+      "tips": [
+        "Use any color you like — mix them for a rainbow bench!",
+        "Build two benches and face them together to make a picnic table."
+      ]
+    }
   ]
 }

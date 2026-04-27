@@ -1,30 +1,71 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import type { ScanResult, InventoryPiece } from "@/lib/types";
+import type { LegoColor } from "@/lib/lego-colors";
 
-interface CameraUploadProps {
-  onImageCapture: (file: File) => void;
-  disabled?: boolean;
+interface MysteryPieceScannerProps {
+  selectedColor: LegoColor;
+  onFound: (piece: Omit<InventoryPiece, "quantity">) => void;
+  onClose: () => void;
 }
 
-export default function CameraUpload({
-  onImageCapture,
-  disabled,
-}: CameraUploadProps) {
+/**
+ * MysteryPieceScanner — modal that lets the user photograph a single unknown
+ * LEGO piece. The image is POSTed to /api/scan and the best guess is returned.
+ * Previously known as CameraUpload; demoted to a single-piece scanner.
+ */
+export default function MysteryPieceScanner({
+  selectedColor,
+  onFound,
+  onClose,
+}: MysteryPieceScannerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFile = useCallback(
-    (file: File) => {
+    async (file: File) => {
       if (!file.type.startsWith("image/")) return;
 
+      // Show preview immediately
       const reader = new FileReader();
       reader.onload = (e) => setPreview(e.target?.result as string);
       reader.readAsDataURL(file);
-      onImageCapture(file);
+
+      setScanning(true);
+      setError(null);
+      setScanResult(null);
+
+      try {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        const res = await fetch("/api/scan", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error(`Scan failed (${res.status})`);
+        }
+
+        const data: { result: ScanResult | null; error?: string } = await res.json();
+
+        if (!data.result) {
+          setError("Could not identify this piece. Try a clearer photo.");
+        } else {
+          setScanResult(data.result);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Scan failed");
+      } finally {
+        setScanning(false);
+      }
     },
-    [onImageCapture]
+    []
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,112 +73,153 @@ export default function CameraUpload({
     if (file) handleFile(file);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+  const handleAccept = () => {
+    if (!scanResult) return;
+    onFound({
+      partNum:  scanResult.partNum,
+      name:     scanResult.name,
+      color:    selectedColor.name,
+      colorHex: selectedColor.hex,
+      imgUrl:   scanResult.imgUrl,
+      category: "Other", // category resolved later by piece-browser if needed
+    });
+    onClose();
   };
 
-  const clearImage = () => {
+  const handleRetry = () => {
     setPreview(null);
+    setScanResult(null);
+    setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className="w-full">
-      {preview ? (
-        <div className="relative">
-          <img
-            src={preview}
-            alt="LEGO pieces preview"
-            className="w-full max-h-80 object-contain rounded-2xl border-2 border-yellow-400"
-          />
-          {!disabled && (
-            <button
-              onClick={clearImage}
-              className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/80 transition-colors"
-            >
-              &times;
-            </button>
-          )}
+    /* Modal overlay */
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-black text-gray-900 text-lg">Scan a Piece</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+          >
+            &times;
+          </button>
         </div>
-      ) : (
-        <div
-          className={`border-3 border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer ${
-            dragOver
-              ? "border-yellow-400 bg-yellow-50"
-              : "border-gray-300 hover:border-yellow-400 hover:bg-yellow-50/50"
-          }`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <div className="text-5xl mb-3">📸</div>
-          <p className="text-lg font-semibold text-gray-700 mb-1">
-            Take a photo or upload an image
-          </p>
-          <p className="text-sm text-gray-500">
-            Spread your LEGO pieces out on a flat surface for best results
-          </p>
 
-          <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
-            <label onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-2 px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-full cursor-pointer hover:bg-yellow-500 transition-colors">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-              Camera
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-            <label onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-full cursor-pointer hover:border-yellow-400 transition-colors">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              Upload
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
+        <p className="text-sm text-gray-500">
+          Take a photo of one LEGO piece and we will try to identify it.
+        </p>
+
+        {!preview ? (
+          /* Upload prompt */
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-yellow-400 hover:bg-yellow-50/40 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="text-5xl mb-3">📸</div>
+            <p className="text-sm font-semibold text-gray-700">
+              Tap to take a photo or upload
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </div>
-        </div>
-      )}
+        ) : (
+          /* Preview + result */
+          <div className="space-y-3">
+            <img
+              src={preview}
+              alt="Piece preview"
+              className="w-full max-h-48 object-contain rounded-xl border border-gray-200"
+            />
+
+            {scanning && (
+              <p className="text-center text-sm text-gray-500 animate-pulse">
+                Scanning...
+              </p>
+            )}
+
+            {error && (
+              <p className="text-center text-sm text-red-500">{error}</p>
+            )}
+
+            {scanResult && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center gap-3">
+                <ScanResultImage src={scanResult.imgUrl} alt={scanResult.name} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm truncate">
+                    {scanResult.name}
+                  </p>
+                  <p className="text-xs text-gray-500">#{scanResult.partNum}</p>
+                  <p className="text-xs text-gray-400">
+                    {Math.round(scanResult.confidence * 100)}% confident
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleRetry}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-full font-semibold text-sm hover:bg-gray-200 transition-colors"
+              >
+                Retry
+              </button>
+              {scanResult && (
+                <button
+                  onClick={handleAccept}
+                  className="flex-1 py-2.5 bg-yellow-400 text-black rounded-full font-bold text-sm hover:bg-yellow-500 active:scale-95 transition-all"
+                >
+                  Add to Shelf
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+/** Part image with onError fallback to a gray placeholder */
+function ScanResultImage({ src, alt }: { src: string; alt: string }) {
+  const [errored, setErrored] = useState(false);
+  if (errored) {
+    return (
+      <div
+        style={{
+          width: "48px",
+          height: "48px",
+          borderRadius: "8px",
+          backgroundColor: "#D1D5DB",
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={{
+        width: "48px",
+        height: "48px",
+        objectFit: "contain",
+        flexShrink: 0,
+      }}
+      onError={() => setErrored(true)}
+    />
   );
 }
