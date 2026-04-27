@@ -224,9 +224,28 @@ async function run() {
 
     // Click Next → step 2
     await nextBtn.click();
-    await page.waitForTimeout(300);
-    const step2Text = await page.locator('text=Step 2 of').isVisible().catch(() => false);
+    // Use waitForSelector so we wait for the progress counter to update regardless of
+    // how long the LDraw viewer's loading overlay takes to render.
+    const step2Text = await page.waitForSelector('p:has-text("Step 2 of")', { timeout: TIMEOUT })
+      .then(() => true).catch(() => false);
     assert(step2Text, '"Next →" advances to step 2');
+
+    // ── 11a. 3D canvas verification ───────────────────────────────────────────
+    console.log('\n=== 11a. 3D LDraw viewer canvas ===');
+    // The Three.js renderer creates a <canvas> inside the viewer div.
+    // Wait for it to appear after client-side hydration.
+    try {
+      await page.waitForSelector('canvas', { state: 'attached', timeout: TIMEOUT });
+      const canvasEl = page.locator('canvas').first();
+      const box = await canvasEl.boundingBox();
+      assert(box !== null, '3D viewer canvas is present in the DOM');
+      if (box) {
+        assert(box.width > 0 && box.height > 0,
+          `3D viewer canvas has non-zero dimensions (${Math.round(box.width)}×${Math.round(box.height)})`);
+      }
+    } catch (e) {
+      assert(false, `3D viewer canvas present — ${e.message.split('\n')[0]}`);
+    }
 
     // Go through remaining steps (stub: 4 total, currently on step 2)
     await page.click('button:has-text("Next →")');

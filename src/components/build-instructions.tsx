@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import type { BuildSuggestion, BuildStep } from "@/lib/types";
 import { useAudio } from "@/hooks/use-audio";
+import { generateLDraw } from "@/lib/ldraw-generator";
+
+// Three.js must only run on the client — skip SSR entirely.
+const LDrawViewer = dynamic(() => import("./ldraw-viewer"), { ssr: false });
 
 // Asset: /public/snap.mp3 required — add a short CC0 click/snap sound
 
@@ -38,6 +43,10 @@ export default function BuildInstructions({
   const totalSteps = suggestion.steps.length;
   const step = suggestion.steps[currentStep];
   const isLastStep = currentStep === totalSteps - 1;
+
+  // 1-based step index for the cumulative LDraw model and label.
+  const ldrawStep = currentStep + 1;
+  const ldrawContent = generateLDraw(suggestion.steps, ldrawStep);
 
   // Speak the instruction when the step changes
   useEffect(() => {
@@ -95,6 +104,14 @@ export default function BuildInstructions({
       <p className="text-center text-xs text-gray-400">
         Step {currentStep + 1} of {totalSteps}
       </p>
+
+      {/* 3D model viewer — updates with each step */}
+      <div className="rounded-2xl overflow-hidden mb-4">
+        <LDrawViewer
+          ldrawContent={ldrawContent}
+          stepLabel={`Step ${ldrawStep} of ${totalSteps}`}
+        />
+      </div>
 
       {/* Step card */}
       <div className="bg-white rounded-2xl border-2 border-yellow-400 overflow-hidden">
