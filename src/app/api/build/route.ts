@@ -38,7 +38,15 @@ JSON schema:
               "color": "string",
               "colorHex": "string",
               "quantity": number,
-              "imgUrl": "string"
+              "imgUrl": "string",
+              "placements": [
+                {
+                  "col": number,
+                  "row": number,
+                  "layer": number,
+                  "rotation": 0 | 90 | 180 | 270
+                }
+              ]
             }
           ]
         }
@@ -46,7 +54,21 @@ JSON schema:
       "tips": ["string"]
     }
   ]
-}`;
+}
+
+For each piece in piecesUsed, include a "placements" array with one entry per physical piece (matching quantity).
+Each placement has:
+  "col": stud column from left, 0-based integer
+  "row": stud row from front, 0-based integer
+  "layer": brick layer from bottom, 0-based integer (0=ground level)
+  "rotation": 0, 90, 180, or 270 (degrees around vertical axis)
+
+Rules:
+- Pieces must not overlap — check col/row/layer coverage before placing
+- Build up in layers; layer 0 is the base
+- Keep the model compact, roughly centered around col 4–8, row 0–4
+- A 2×4 brick at (col, row, layer, rotation=0) occupies cols col..col+3, rows row..row+1
+- A 2×4 brick at rotation=90 occupies cols col..col+1, rows row..row+3`;
 }
 
 function buildUserMessage(req: BuildRequest): string {

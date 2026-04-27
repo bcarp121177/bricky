@@ -26,6 +26,13 @@ export interface BuildStep {
     colorHex: string;
     quantity: number;
     imgUrl: string;
+    // LDraw stud-grid placement (one entry per physical piece, not per quantity)
+    placements: Array<{
+      col: number;    // stud column, 0-based left-to-right
+      row: number;    // stud row, 0-based front-to-back
+      layer: number;  // brick layer, 0=base, 1=one brick up, etc.
+      rotation: 0 | 90 | 180 | 270;  // degrees around vertical Y axis
+    }>;
   }>;
 }
 
