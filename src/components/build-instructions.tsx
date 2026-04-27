@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import type { BuildSuggestion, BuildStep } from "@/lib/types";
 import { useAudio } from "@/hooks/use-audio";
 
@@ -39,6 +40,7 @@ export default function BuildInstructions({
 
   useEffect(() => {
     if (step) speak(step.instruction);
+    // speak is stable (useCallback with no deps in useAudio)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
 
@@ -113,8 +115,8 @@ export default function BuildInstructions({
               Pieces for this step
             </p>
             <div className="grid grid-cols-2 gap-3">
-              {step.piecesUsed.map((piece, i) => (
-                <PieceCard key={i} piece={piece} />
+              {step.piecesUsed.map((piece) => (
+                <PieceCard key={`${piece.partNum}-${piece.color}`} piece={piece} />
               ))}
             </div>
           </div>
@@ -156,8 +158,8 @@ export default function BuildInstructions({
             <span>💡</span> Tips
           </h3>
           <ul className="space-y-1">
-            {suggestion.tips.map((tip, i) => (
-              <li key={i} className="text-sm text-blue-800 flex gap-2">
+            {suggestion.tips.map((tip) => (
+              <li key={tip} className="text-sm text-blue-800 flex gap-2">
                 <span className="text-blue-400 mt-0.5">•</span>
                 {tip}
               </li>
@@ -190,10 +192,12 @@ function PieceCard({ piece }: { piece: BuildStep["piecesUsed"][number] }) {
         {/* Part image with quantity badge */}
         <div className="relative flex-shrink-0">
           {!imgErrored ? (
-            <img
+            <Image
               src={piece.imgUrl}
               alt={piece.name}
-              className="w-16 h-16 object-contain"
+              width={64}
+              height={64}
+              className="object-contain"
               onError={() => setImgErrored(true)}
             />
           ) : (
