@@ -65,11 +65,37 @@ ${pieceLines}
 Give me 3 build suggestions using ONLY these pieces.`;
 }
 
+/**
+ * Enrichment pass: copy imgUrl from the original inventory into every
+ * piecesUsed entry. The AI cannot be trusted to copy URLs faithfully, so we
+ * overwrite server-side after parsing. Matching key: partNum + color.
+ */
+function enrichImgUrls(buildResponse: BuildResponse, pieces: BuildRequest["pieces"]): void {
+  const lookup = new Map<string, string>();
+  for (const piece of pieces) {
+    lookup.set(`${piece.partNum}:${piece.color}`, piece.imgUrl);
+  }
+  for (const suggestion of buildResponse.suggestions) {
+    for (const step of suggestion.steps) {
+      for (const entry of step.piecesUsed) {
+        const url = lookup.get(`${entry.partNum}:${entry.color}`);
+        if (url) {
+          entry.imgUrl = url;
+        }
+      }
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   // USE_STUB: skip API call entirely
   if (process.env.USE_STUB === "true") {
     await new Promise((r) => setTimeout(r, 900)); // simulate latency
-    return Response.json(stubData as BuildResponse);
+    const body: BuildRequest = await request.json();
+    // Deep-copy so we don't mutate the cached module import across requests
+    const response: BuildResponse = JSON.parse(JSON.stringify(stubData));
+    enrichImgUrls(response, body.pieces);
+    return Response.json(response);
   }
 
   try {
@@ -148,6 +174,9 @@ ${body.pieces.map((p) => `${p.partNum} ${p.name} ${p.color}`).join("\n")}`,
         { status: 500 }
       );
     }
+
+    // Enrich imgUrls server-side so piece chips always show real images
+    enrichImgUrls(buildResponse, body.pieces);
 
     // CAPTURE_RESPONSE: persist live response as new stub
     if (process.env.CAPTURE_RESPONSE === "true") {
