@@ -63,14 +63,6 @@ export default function BuildInstructions({
 
   return (
     <div className="w-full space-y-4">
-      <style>{`
-        @keyframes stepIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .step-animate { animation: stepIn 0.22s ease both; }
-      `}</style>
-
       {/* Header */}
       <div className="text-center">
         <h2 className="text-xl font-bold text-gray-900">{suggestion.title}</h2>
@@ -158,8 +150,8 @@ export default function BuildInstructions({
             <span>💡</span> Tips
           </h3>
           <ul className="space-y-1">
-            {suggestion.tips.map((tip) => (
-              <li key={tip} className="text-sm text-blue-800 flex gap-2">
+            {suggestion.tips.map((tip, i) => (
+              <li key={`tip-${i}`} className="text-sm text-blue-800 flex gap-2">
                 <span className="text-blue-400 mt-0.5">•</span>
                 {tip}
               </li>
@@ -226,7 +218,7 @@ function PieceCard({ piece }: { piece: BuildStep["piecesUsed"][number] }) {
               className="inline-block w-2.5 h-2.5 rounded-full border border-black/10 flex-shrink-0"
               style={{ backgroundColor: piece.colorHex }}
             />
-            <span className="text-xs text-gray-400 truncate">{piece.color}</span>
+            <span className="text-xs text-gray-600 truncate">{piece.color}</span>
           </div>
         </div>
       </div>
