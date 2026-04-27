@@ -171,10 +171,10 @@ function BrickSvg({ p }: { p: BrickPlacement }): React.ReactElement {
   const studs = studCenters(p.col, p.row, p.layer, dims.w, dims.d, layerH, SCALE);
   const stroke = p.isCurrent ? "#000000" : "none";
   const strokeW = p.isCurrent ? 1 : 0;
-  const key = `${p.col}-${p.row}-${p.layer}-${p.partNum}`;
+  const brickKey = `${p.col}-${p.row}-${p.layer}-${p.partNum}`;
 
   return (
-    <g key={key}>
+    <g>
       {/* Right-front face (darkest) */}
       <polygon
         points={rightFront}
@@ -199,7 +199,7 @@ function BrickSvg({ p }: { p: BrickPlacement }): React.ReactElement {
       {/* Studs */}
       {studs.map((s, i) => (
         <circle
-          key={`${key}-s${i}`}
+          key={`${brickKey}-s${i}`}
           cx={s.cx}
           cy={s.cy}
           r={SCALE * STUD_RADIUS}

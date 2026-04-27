@@ -47,23 +47,16 @@ export function brickToPolygons(
   const bh = (layerH * scale) / 20; // brick height in SVG pixels
 
   // The eight corners of the brick in stud-grid space, projected to SVG.
-  // Top face corners (at layer + layerH units above):
-  const tl = project(col,     row + d, layer + 1, layerH, scale); // top-left in iso
-  const tr = project(col + w, row + d, layer + 1, layerH, scale); // top-right (back)
-  const bl = project(col,     row,     layer + 1, layerH, scale); // bottom-left (front)
-  const br = project(col + w, row,     layer + 1, layerH, scale); // bottom-right (front-right)
+  // Top face corners (at layer + 1, i.e. the top surface):
+  const tl = project(col,     row + d, layer + 1, layerH, scale); // back-left corner
+  const tr = project(col + w, row + d, layer + 1, layerH, scale); // back-right corner
+  const bl = project(col,     row,     layer + 1, layerH, scale); // front-left corner
+  const br = project(col + w, row,     layer + 1, layerH, scale); // front-right corner
 
-  // Bottom face corners (at layer):
-  const blB = project(col,     row,     layer, layerH, scale);
-  const brB = project(col + w, row,     layer, layerH, scale);
-  const trB = project(col + w, row + d, layer, layerH, scale);
-
-  // Top face: tl, tr, br, bl (diamond)
+  // Top face diamond: back-left, back-right, front-right, front-left
   const top = pts([tl, tr, br, bl]);
 
-  // Left-front face: bl (top), blB (bottom), trB... wait, left-front is the face
-  // visible on the left side of the iso brick (front-left wall).
-  // Left-front face vertices: bl(top), tl(top), tl-down(bottom), bl-down(bottom)
+  // Left-front face (left side wall): top edge tl→bl, bottom edge shifted down by bh
   const leftFront = pts([
     tl,
     bl,
