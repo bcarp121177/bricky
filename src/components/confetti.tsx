@@ -10,6 +10,7 @@ interface ConfettiPiece {
   color: string;
   size: number;    // px
   rotation: number;
+  shape: "circle" | "square";
 }
 
 const COLORS = [
@@ -40,6 +41,7 @@ export default function Confetti() {
       color:    COLORS[Math.floor(Math.random() * COLORS.length)],
       size:     randomBetween(6, 14),
       rotation: randomBetween(0, 360),
+      shape:    Math.random() > 0.5 ? "circle" : "square" as "circle" | "square",
     }));
     setPieces(newPieces);
   }, []);
@@ -59,7 +61,7 @@ export default function Confetti() {
             width:    `${p.size}px`,
             height:   `${p.size}px`,
             backgroundColor: p.color,
-            borderRadius:    Math.random() > 0.5 ? "50%" : "2px",
+            borderRadius:    p.shape === "circle" ? "50%" : "2px",
             transform:       `rotate(${p.rotation}deg)`,
             animation: `confettiFall ${p.duration}s ${p.delay}s ease-in forwards`,
           }}

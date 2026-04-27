@@ -22,12 +22,14 @@ interface BuildInstructionsProps {
   suggestion: BuildSuggestion;
   onReset: () => void;
   onBack: () => void;
+  onComplete: () => void;
 }
 
 export default function BuildInstructions({
   suggestion,
   onReset,
   onBack,
+  onComplete,
 }: BuildInstructionsProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [done, setDone] = useState(false);
@@ -51,6 +53,7 @@ export default function BuildInstructions({
     if (isLastStep) {
       setDone(true);
       speak("Great job! You did it!");
+      onComplete();
     } else {
       setCurrentStep((s) => s + 1);
     }

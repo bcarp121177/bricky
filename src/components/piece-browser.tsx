@@ -61,17 +61,6 @@ export default function PieceBrowser({
     fetchParts(nextPage, true);
   };
 
-  function getInventoryCount(partNum: string): number {
-    // Sum all colors for this part
-    let total = 0;
-    for (const [key, piece] of inventory) {
-      if (key.startsWith(`${partNum}:`)) {
-        total += piece.quantity;
-      }
-    }
-    return total;
-  }
-
   return (
     <div className="w-full space-y-3">
       {/* Category filter */}
@@ -100,7 +89,6 @@ export default function PieceBrowser({
       ) : (
         <div className="grid grid-cols-3 gap-2">
           {parts.map((part) => {
-            const count = getInventoryCount(part.partNum);
             const inventoryKey = `${part.partNum}:${selectedColor.name}`;
             const inInventoryForThisColor = inventory.get(inventoryKey)?.quantity ?? 0;
 
@@ -133,13 +121,13 @@ export default function PieceBrowser({
                 </p>
                 <p className="text-xs text-gray-400">#{part.partNum}</p>
 
-                {/* Inventory badge */}
-                {count > 0 && (
+                {/* Inventory badge — per-color count only */}
+                {inInventoryForThisColor > 0 && (
                   <span
                     className="absolute top-1 right-1 bg-yellow-400 text-black text-xs font-bold rounded-full flex items-center justify-center"
                     style={{ width: "18px", height: "18px", fontSize: "10px" }}
                   >
-                    {inInventoryForThisColor > 0 ? inInventoryForThisColor : count}
+                    {inInventoryForThisColor}
                   </span>
                 )}
               </button>
