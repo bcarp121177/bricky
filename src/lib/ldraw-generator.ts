@@ -157,10 +157,9 @@ export function generateLDraw(steps: BuildStep[], upToStep: number): string {
       const partFile = `${entry.partNum}.dat`;
 
       for (const placement of entry.placements) {
-        const rotation = placement.rotation as 0 | 90 | 180 | 270;
-        const { x, y, z } = studGridToLDraw({ ...placement, rotation }, entry.partNum);
+        const { x, y, z } = studGridToLDraw(placement, entry.partNum);
         const [r11, r12, r13, r21, r22, r23, r31, r32, r33] =
-          ROTATION_MATRICES[rotation];
+          ROTATION_MATRICES[placement.rotation];
 
         lines.push(
           `1 ${color} ${x} ${y} ${z} ${r11} ${r12} ${r13} ${r21} ${r22} ${r23} ${r31} ${r32} ${r33} ${partFile}`
