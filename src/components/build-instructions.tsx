@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { BuildSuggestion, BuildStep } from "@/lib/types";
 import { useAudio } from "@/hooks/use-audio";
+import { IsometricStepDiagram } from "@/components/isometric-step-diagram";
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: "Easy",
@@ -16,6 +17,13 @@ const DIFFICULTY_COLORS: Record<number, string> = {
   2: "bg-yellow-100 text-yellow-800",
   3: "bg-red-100 text-red-800",
 };
+
+/** Returns true if at least one piece in the step has non-empty placement data. */
+function hasPlacementData(step: BuildStep): boolean {
+  return step.piecesUsed.some(
+    (p) => Array.isArray(p.placements) && p.placements.length > 0
+  );
+}
 
 interface BuildInstructionsProps {
   suggestion: BuildSuggestion;
@@ -100,18 +108,25 @@ export function BuildInstructions({
           </p>
         </div>
 
-        {/* Parts for this step */}
+        {/* Parts for this step — isometric diagram if placement data exists, chip grid otherwise */}
         {step.piecesUsed && step.piecesUsed.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 px-1">
-              Pieces for this step
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {step.piecesUsed.map((piece) => (
-                <PieceCard key={`${piece.partNum}-${piece.color}`} piece={piece} />
-              ))}
+          hasPlacementData(step) ? (
+            <IsometricStepDiagram
+              steps={suggestion.steps.slice(0, currentStep + 1)}
+              currentStepIndex={currentStep}
+            />
+          ) : (
+            <div>
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 px-1">
+                Pieces for this step
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {step.piecesUsed.map((piece) => (
+                  <PieceCard key={`${piece.partNum}-${piece.color}`} piece={piece} />
+                ))}
+              </div>
             </div>
-          </div>
+          )
         )}
       </div>
 
