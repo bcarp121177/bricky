@@ -131,7 +131,16 @@ ${body.pieces.map((p) => `${p.partNum} ${p.name} ${p.color}`).join("\n")}`,
         .replace(/^```json?\s*/i, "")
         .replace(/\s*```$/i, "")
         .trim();
-      buildResponse = JSON.parse(cleanJson) as BuildResponse;
+      const parsed: unknown = JSON.parse(cleanJson);
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        !("suggestions" in parsed) ||
+        !Array.isArray((parsed as Record<string, unknown>).suggestions)
+      ) {
+        throw new Error("Unexpected response shape from AI");
+      }
+      buildResponse = parsed as BuildResponse;
     } catch {
       console.error("Failed to parse Claude response:", responseText);
       return Response.json(

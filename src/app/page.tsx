@@ -2,8 +2,7 @@
 
 import { useState, useCallback } from "react";
 import type { Theme, InventoryPiece, BuildResponse, BuildSuggestion } from "@/lib/types";
-import type { LegoColor } from "@/lib/lego-colors";
-import { LEGO_COLORS } from "@/lib/lego-colors";
+import { LEGO_COLORS, type LegoColor } from "@/lib/lego-colors";
 
 import { useInventory } from "@/hooks/use-inventory";
 
@@ -16,6 +15,9 @@ import BuildSelection from "@/components/build-selection";
 import BuildInstructions from "@/components/build-instructions";
 import LoadingState from "@/components/loading-state";
 import Confetti from "@/components/confetti";
+import WelcomeScreen from "@/components/welcome-screen";
+import DoneScreen from "@/components/done-screen";
+import ErrorScreen from "@/components/error-screen";
 
 /**
  * 8-screen state machine:
@@ -69,8 +71,14 @@ export default function Home() {
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(errData.error ?? `Build failed (${res.status})`);
+        const errData: unknown = await res.json().catch(() => ({}));
+        const msg =
+          typeof errData === "object" &&
+          errData !== null &&
+          "error" in errData
+            ? String((errData as Record<string, unknown>).error)
+            : `Build failed (${res.status})`;
+        throw new Error(msg);
       }
 
       const data: BuildResponse = await res.json();
@@ -164,43 +172,8 @@ export default function Home() {
       {/* Main content */}
       <main className="flex-1 px-4 py-6 overflow-y-auto">
         <div className="max-w-2xl mx-auto">
-
           {/* ── Screen: welcome ──────────────────────────────────────────── */}
-          {screen === "welcome" && (
-            <div className="space-y-8 text-center">
-              <div className="pt-4">
-                <div className="text-8xl mb-4">🧱</div>
-                <h2 className="text-3xl font-black text-gray-900">
-                  What will you build?
-                </h2>
-                <p className="text-gray-500 mt-2 text-base">
-                  Tell us what LEGO pieces you have. We will come up with something awesome.
-                </p>
-              </div>
-
-              <button
-                onClick={goToInventory}
-                className="w-full max-w-xs mx-auto block py-4 bg-yellow-400 text-black font-black text-xl rounded-full shadow-lg shadow-yellow-400/30 hover:bg-yellow-500 active:scale-95 transition-all"
-              >
-                Add My Pieces →
-              </button>
-
-              {/* How it works */}
-              <div className="grid grid-cols-3 gap-4 text-center pt-2">
-                {[
-                  { icon: "🧱", title: "Add Pieces", desc: "Browse or scan your bricks" },
-                  { icon: "🎨", title: "Pick Theme", desc: "Space, Castle, Ocean & more" },
-                  { icon: "📋", title: "Build!", desc: "Step-by-step instructions" },
-                ].map((step) => (
-                  <div key={step.title}>
-                    <div className="text-3xl mb-1">{step.icon}</div>
-                    <div className="font-semibold text-gray-900 text-sm">{step.title}</div>
-                    <div className="text-xs text-gray-500">{step.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {screen === "welcome" && <WelcomeScreen onStart={goToInventory} />}
 
           {/* ── Screen: inventory ────────────────────────────────────────── */}
           {screen === "inventory" && (
@@ -281,9 +254,7 @@ export default function Home() {
           )}
 
           {/* ── Screen: loading ───────────────────────────────────────────── */}
-          {screen === "loading" && (
-            <LoadingState theme={selectedTheme} />
-          )}
+          {screen === "loading" && <LoadingState theme={selectedTheme} />}
 
           {/* ── Screen: pick ──────────────────────────────────────────────── */}
           {screen === "pick" && buildResponse && (
@@ -312,54 +283,10 @@ export default function Home() {
           )}
 
           {/* ── Screen: done ───────────────────────────────────────────────── */}
-          {screen === "done" && (
-            <div className="w-full flex flex-col items-center py-8 space-y-6 text-center">
-              <div className="text-7xl">🎉</div>
-              <div>
-                <h2 className="text-2xl font-black text-gray-900">You did it!</h2>
-                <p className="text-gray-500 mt-2">Amazing work. Your build is complete!</p>
-              </div>
-              <div className="flex flex-col gap-3 w-full max-w-xs">
-                <button
-                  onClick={handleBackToPick}
-                  className="w-full py-3 bg-yellow-400 text-black font-bold rounded-full hover:bg-yellow-500 active:scale-95 transition-all"
-                >
-                  Try Another Build
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="w-full py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-gray-800 transition-colors"
-                >
-                  Start Over
-                </button>
-              </div>
-            </div>
-          )}
+          {screen === "done" && <DoneScreen onBackToPick={handleBackToPick} onReset={handleReset} />}
 
           {/* ── Screen: error ─────────────────────────────────────────────── */}
-          {screen === "error" && (
-            <div className="text-center py-12 space-y-4">
-              <div className="text-5xl">😕</div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Oops, something went wrong
-              </h2>
-              <p className="text-gray-500 text-sm">{errorMessage}</p>
-              <div className="flex flex-col gap-3 max-w-xs mx-auto">
-                <button
-                  onClick={goToBuild}
-                  className="w-full py-3 bg-yellow-400 text-black font-bold rounded-full hover:bg-yellow-500 transition-colors"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="w-full py-3 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200 transition-colors"
-                >
-                  Start Over
-                </button>
-              </div>
-            </div>
-          )}
+          {screen === "error" && <ErrorScreen message={errorMessage} onRetry={goToBuild} onReset={handleReset} />}
 
         </div>
       </main>
