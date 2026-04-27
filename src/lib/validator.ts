@@ -115,13 +115,12 @@ export function validatePlacements(
         }
 
         for (const placement of entry.placements) {
-          const rotation = placement.rotation as 0 | 90 | 180 | 270;
           const cells = footprintCells(
             placement.col,
             placement.row,
             placement.layer,
             entry.partNum,
-            rotation
+            placement.rotation
           );
 
           // Overlap check: report once per placement if any cell is already taken.
