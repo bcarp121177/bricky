@@ -1,15 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import type { BuildSuggestion, BuildStep } from "@/lib/types";
 import { useAudio } from "@/hooks/use-audio";
-import { generateLDraw } from "@/lib/ldraw-generator";
-
-// Three.js must only run on the client — skip SSR entirely.
-const LDrawViewer = dynamic(() => import("./ldraw-viewer"), { ssr: false });
-
-// Asset: /public/snap.mp3 required — add a short CC0 click/snap sound
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: "Easy",
@@ -44,20 +37,12 @@ export default function BuildInstructions({
   const step = suggestion.steps[currentStep];
   const isLastStep = currentStep === totalSteps - 1;
 
-  // 1-based step index for the cumulative LDraw model and label.
-  const ldrawStep = currentStep + 1;
-  const ldrawContent = generateLDraw(suggestion.steps, ldrawStep);
-
-  // Speak the instruction when the step changes
   useEffect(() => {
-    if (step) {
-      speak(step.instruction);
-    }
+    if (step) speak(step.instruction);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
 
   const goNext = () => {
-    // Asset: /public/snap.mp3 required — add a short CC0 click/snap sound
     playSnap();
     if (isLastStep) {
       setDone(true);
@@ -68,75 +53,72 @@ export default function BuildInstructions({
     }
   };
 
-  const goPrev = () => {
-    setCurrentStep((s) => Math.max(0, s - 1));
-  };
+  const goPrev = () => setCurrentStep((s) => Math.max(0, s - 1));
 
-  if (done) {
-    return <FinishedScreen onReset={onReset} onBack={onBack} />;
-  }
+  if (done) return <FinishedScreen onReset={onReset} onBack={onBack} />;
+
+  const progress = ((currentStep + 1) / totalSteps) * 100;
 
   return (
     <div className="w-full space-y-4">
+      <style>{`
+        @keyframes stepIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .step-animate { animation: stepIn 0.22s ease both; }
+      `}</style>
+
       {/* Header */}
       <div className="text-center">
         <h2 className="text-xl font-bold text-gray-900">{suggestion.title}</h2>
-        <p className="text-gray-500 text-sm mt-1">{suggestion.description}</p>
+        <p className="text-gray-500 text-sm mt-0.5">{suggestion.description}</p>
         <div className="flex items-center justify-center gap-2 mt-2">
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-              DIFFICULTY_COLORS[suggestion.difficulty] ?? "bg-gray-100 text-gray-700"
-            }`}
-          >
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${DIFFICULTY_COLORS[suggestion.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
             {DIFFICULTY_LABELS[suggestion.difficulty] ?? `Level ${suggestion.difficulty}`}
           </span>
           <span className="text-xs text-gray-400">~{suggestion.estimatedTime}</span>
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-        <div
-          className="h-2 bg-yellow-400 rounded-full transition-all duration-300"
-          style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
-        />
-      </div>
-      <p className="text-center text-xs text-gray-400">
-        Step {currentStep + 1} of {totalSteps}
-      </p>
-
-      {/* 3D model viewer — updates with each step */}
-      <div className="rounded-2xl overflow-hidden mb-4">
-        <LDrawViewer
-          ldrawContent={ldrawContent}
-          stepLabel={`Step ${ldrawStep} of ${totalSteps}`}
-        />
+      {/* Progress */}
+      <div>
+        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+          <div
+            className="h-2 bg-yellow-400 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <p className="text-center text-xs text-gray-400 mt-1">
+          Step {currentStep + 1} of {totalSteps}
+        </p>
       </div>
 
-      {/* Step card */}
-      <div className="bg-white rounded-2xl border-2 border-yellow-400 overflow-hidden">
-        <div className="bg-yellow-400 px-4 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-black text-yellow-400 font-black flex items-center justify-center text-sm">
+      {/* Step card — key forces full re-mount + animation on step change */}
+      <div key={currentStep} className="step-animate space-y-4">
+        {/* Instruction */}
+        <div className="bg-yellow-400 rounded-2xl px-4 py-4 flex gap-3 items-start">
+          <div className="w-9 h-9 rounded-full bg-black text-yellow-400 font-black text-base flex items-center justify-center flex-shrink-0">
             {step.stepNumber}
           </div>
-          <span className="font-bold text-black text-sm">
-            Step {step.stepNumber}
-          </span>
-        </div>
-        <div className="p-4">
-          <p className="text-gray-900 font-medium leading-relaxed text-base">
+          <p className="text-black font-semibold text-base leading-snug pt-1">
             {step.instruction}
           </p>
+        </div>
 
-          {/* Piece chips */}
-          {step.piecesUsed && step.piecesUsed.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
+        {/* Parts for this step */}
+        {step.piecesUsed && step.piecesUsed.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">
+              Pieces for this step
+            </p>
+            <div className="grid grid-cols-2 gap-3">
               {step.piecesUsed.map((piece, i) => (
-                <PieceChip key={i} piece={piece} />
+                <PieceCard key={i} piece={piece} />
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}
@@ -152,7 +134,7 @@ export default function BuildInstructions({
           disabled={currentStep === 0}
           className="px-4 py-2.5 rounded-full bg-gray-100 text-gray-700 font-semibold disabled:opacity-30 hover:bg-gray-200 transition-colors"
         >
-          Previous
+          Prev
         </button>
         <button
           onClick={goNext}
@@ -160,10 +142,10 @@ export default function BuildInstructions({
           className={`py-2.5 rounded-full font-bold text-base transition-all active:scale-95 ${
             isLastStep
               ? "bg-green-500 text-white hover:bg-green-600"
-              : "bg-yellow-400 text-black hover:bg-yellow-500"
+              : "bg-gray-900 text-white hover:bg-gray-700"
           }`}
         >
-          {isLastStep ? "I Did It! ✓" : "Next →"}
+          {isLastStep ? "Done! ✓" : "Next step →"}
         </button>
       </div>
 
@@ -184,7 +166,6 @@ export default function BuildInstructions({
         </div>
       )}
 
-      {/* Restart */}
       <div className="text-center">
         <button
           onClick={onReset}
@@ -197,60 +178,59 @@ export default function BuildInstructions({
   );
 }
 
-/** Individual piece chip shown in a step */
-function PieceChip({ piece }: { piece: BuildStep["piecesUsed"][number] }) {
+function PieceCard({ piece }: { piece: BuildStep["piecesUsed"][number] }) {
   const [imgErrored, setImgErrored] = useState(false);
 
   return (
-    <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1">
-      {/* Color dot */}
-      <span
-        style={{
-          display: "inline-block",
-          width: "10px",
-          height: "10px",
-          borderRadius: "50%",
-          backgroundColor: piece.colorHex,
-          border: "1px solid rgba(0,0,0,0.15)",
-          flexShrink: 0,
-        }}
-      />
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+      {/* Color strip */}
+      <div style={{ backgroundColor: piece.colorHex, height: "5px" }} />
 
-      {/* Part image */}
-      {!imgErrored ? (
-        <img
-          src={piece.imgUrl}
-          alt={piece.name}
-          style={{ width: "20px", height: "20px", objectFit: "contain" }}
-          onError={() => setImgErrored(true)}
-        />
-      ) : (
-        <div
-          style={{
-            width: "20px",
-            height: "20px",
-            borderRadius: "3px",
-            backgroundColor: "#D1D5DB",
-            flexShrink: 0,
-          }}
-        />
-      )}
+      <div className="p-3 flex gap-3 items-center flex-1">
+        {/* Part image with quantity badge */}
+        <div className="relative flex-shrink-0">
+          {!imgErrored ? (
+            <img
+              src={piece.imgUrl}
+              alt={piece.name}
+              className="w-16 h-16 object-contain"
+              onError={() => setImgErrored(true)}
+            />
+          ) : (
+            <div
+              className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl"
+              style={{ backgroundColor: piece.colorHex + "33" }}
+            >
+              🧱
+            </div>
+          )}
+          <div
+            className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white shadow"
+            style={{ backgroundColor: "#111" }}
+          >
+            {piece.quantity}
+          </div>
+        </div>
 
-      <span className="text-xs font-medium text-gray-700">
-        {piece.quantity}× {piece.name}
-      </span>
+        {/* Info */}
+        <div className="min-w-0">
+          <p className="text-xs text-gray-700 font-medium leading-tight line-clamp-2">
+            {piece.name}
+          </p>
+          <div className="flex items-center gap-1 mt-1">
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full border border-black/10 flex-shrink-0"
+              style={{ backgroundColor: piece.colorHex }}
+            />
+            <span className="text-xs text-gray-400 truncate">{piece.color}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-/** Shown when all steps are complete */
-function FinishedScreen({
-  onReset,
-  onBack,
-}: {
-  onReset: () => void;
-  onBack: () => void;
-}) {
+function FinishedScreen({ onReset, onBack }: { onReset: () => void; onBack: () => void }) {
   return (
     <div className="w-full flex flex-col items-center py-8 space-y-6 text-center">
       <div className="text-7xl">🎉</div>
