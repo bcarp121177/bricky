@@ -4,6 +4,8 @@ import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import stubData from "@/lib/stub-response.json";
 import type { BuildRequest, BuildResponse } from "@/lib/types";
+import { validatePlacements } from "@/lib/validator";
+import type { Violation } from "@/lib/validator";
 
 const anthropic = new Anthropic();
 
@@ -109,6 +111,13 @@ function enrichImgUrls(buildResponse: BuildResponse, pieces: BuildRequest["piece
   }
 }
 
+/** Format violations into a human-readable list for the re-prompt message. */
+function buildViolationLines(violations: Violation[]): string {
+  return violations
+    .map((v) => `- [${v.type}] ${v.detail}`)
+    .join("\n");
+}
+
 export async function POST(request: NextRequest) {
   // USE_STUB: skip API call entirely
   if (process.env.USE_STUB === "true") {
@@ -157,61 +166,99 @@ ${body.pieces.map((p) => `${p.partNum} ${p.name} ${p.color}`).join("\n")}`,
       );
     }
 
-    // Step 2: Sonnet generates the 3 suggestions
-    const genMsg = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      system: buildSystemPrompt(),
-      messages: [
+    // Step 2: Sonnet generates the 3 suggestions, with up to 3 attempts if
+    // placements are invalid (retry loop re-prompts Claude with violation details).
+    const MAX_ATTEMPTS = 3;
+    const conversationMessages: Anthropic.MessageParam[] = [
+      { role: "user", content: buildUserMessage(body) },
+    ];
+
+    let buildResponse: BuildResponse | null = null;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const genMsg = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4096,
+        system: buildSystemPrompt(),
+        messages: conversationMessages,
+      });
+
+      const responseText =
+        genMsg.content[0].type === "text" ? genMsg.content[0].text : "";
+
+      let parsed: BuildResponse;
+      try {
+        const cleanJson = responseText
+          .replace(/^```json?\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
+        const raw: unknown = JSON.parse(cleanJson);
+        if (
+          !raw ||
+          typeof raw !== "object" ||
+          !("suggestions" in raw) ||
+          !Array.isArray((raw as Record<string, unknown>).suggestions)
+        ) {
+          throw new Error("Unexpected response shape from AI");
+        }
+        parsed = raw as BuildResponse;
+      } catch {
+        console.error("Failed to parse Claude response:", responseText);
+        return Response.json(
+          { error: "Failed to parse build suggestions", raw: responseText },
+          { status: 500 }
+        );
+      }
+
+      const validationResult = validatePlacements(parsed, body.pieces);
+
+      if (validationResult.valid) {
+        buildResponse = parsed;
+        break;
+      }
+
+      // Violations found — if we've exhausted all attempts, return hard error.
+      if (attempt === MAX_ATTEMPTS) {
+        console.error(
+          `Placement validation failed after ${MAX_ATTEMPTS} attempts`,
+          validationResult.violations
+        );
+        return Response.json(
+          { error: "Could not generate valid placements after 3 attempts" },
+          { status: 500 }
+        );
+      }
+
+      // Append the AI's response and a re-prompt so the next loop iteration
+      // sends a full conversation turn to Claude.
+      const violationLines = buildViolationLines(validationResult.violations);
+      conversationMessages.push(
+        { role: "assistant", content: responseText },
         {
           role: "user",
-          content: buildUserMessage(body),
-        },
-      ],
-    });
-
-    const responseText =
-      genMsg.content[0].type === "text" ? genMsg.content[0].text : "";
-
-    let buildResponse: BuildResponse;
-    try {
-      const cleanJson = responseText
-        .replace(/^```json?\s*/i, "")
-        .replace(/\s*```$/i, "")
-        .trim();
-      const parsed: unknown = JSON.parse(cleanJson);
-      if (
-        !parsed ||
-        typeof parsed !== "object" ||
-        !("suggestions" in parsed) ||
-        !Array.isArray((parsed as Record<string, unknown>).suggestions)
-      ) {
-        throw new Error("Unexpected response shape from AI");
-      }
-      buildResponse = parsed as BuildResponse;
-    } catch {
-      console.error("Failed to parse Claude response:", responseText);
-      return Response.json(
-        { error: "Failed to parse build suggestions", raw: responseText },
-        { status: 500 }
+          content: `The placements have the following errors. Please return corrected JSON only:\n${violationLines}`,
+        }
       );
     }
 
+    // buildResponse is guaranteed non-null here (loop always sets it or returns early).
+    const finalResponse = buildResponse!;
+
     // Enrich imgUrls server-side so piece chips always show real images
-    enrichImgUrls(buildResponse, body.pieces);
+    enrichImgUrls(finalResponse, body.pieces);
 
     // CAPTURE_RESPONSE: persist live response as new stub
     if (process.env.CAPTURE_RESPONSE === "true") {
       try {
         const stubPath = join(process.cwd(), "src/lib/stub-response.json");
-        writeFileSync(stubPath, JSON.stringify(buildResponse, null, 2));
+        writeFileSync(stubPath, JSON.stringify(finalResponse, null, 2));
         console.log("stub-response.json updated from live response");
       } catch (e) {
         console.warn("Could not write stub-response.json:", e);
       }
     }
 
-    return Response.json(buildResponse);
+    return Response.json(finalResponse);
   } catch (error) {
     console.error("Build error:", error);
     return Response.json({ error: "Failed to generate build suggestions" }, { status: 500 });
