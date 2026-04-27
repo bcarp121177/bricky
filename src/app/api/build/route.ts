@@ -110,6 +110,16 @@ function enrichImgUrls(buildResponse: BuildResponse, pieces: BuildRequest["piece
   }
 }
 
+/** Runtime type guard: verifies that an unknown value has the shape of BuildResponse. */
+function isBuildResponse(value: unknown): value is BuildResponse {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "suggestions" in value &&
+    Array.isArray((value as Record<string, unknown>).suggestions)
+  );
+}
+
 /** Format violations into a human-readable list for the re-prompt message. */
 function buildViolationLines(violations: Violation[]): string {
   return violations
@@ -117,7 +127,7 @@ function buildViolationLines(violations: Violation[]): string {
     .join("\n");
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response> {
   // USE_STUB: skip API call entirely
   if (process.env.USE_STUB === "true") {
     await new Promise((r) => setTimeout(r, 900)); // simulate latency
@@ -190,15 +200,10 @@ ${body.pieces.map((p) => `${p.partNum} ${p.name} ${p.color}`).join("\n")}`,
           .replace(/\s*```$/i, "")
           .trim();
         const raw: unknown = JSON.parse(cleanJson);
-        if (
-          !raw ||
-          typeof raw !== "object" ||
-          !("suggestions" in raw) ||
-          !Array.isArray((raw as Record<string, unknown>).suggestions)
-        ) {
+        if (!isBuildResponse(raw)) {
           throw new Error("Unexpected response shape from AI");
         }
-        parsed = raw as BuildResponse;
+        parsed = raw;
       } catch {
         console.error("Failed to parse Claude response:", responseText);
         return Response.json(

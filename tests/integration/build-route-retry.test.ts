@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 // ---------------------------------------------------------------------------
 // Shared fixture data
@@ -107,8 +108,8 @@ const MINIMAL_PIECES = [
   },
 ];
 
-function makeRequest(body: object): Request {
-  return new Request("http://localhost/api/build", {
+function makeRequest(body: object): NextRequest {
+  return new NextRequest("http://localhost/api/build", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -150,7 +151,7 @@ describe("/api/build retry loop", () => {
     process.env.USE_STUB = "true";
 
     const req = makeRequest({ pieces: MINIMAL_PIECES, theme: "Space" });
-    const response = await POST(req as any);
+    const response = await POST(req);
 
     // Stub path returns 200 and does not call Anthropic at all
     expect(response.status).toBe(200);
@@ -167,7 +168,7 @@ describe("/api/build retry loop", () => {
       .mockResolvedValueOnce({ content: makeGenContent(VALID_RESPONSE_JSON) });
 
     const req = makeRequest({ pieces: MINIMAL_PIECES, theme: "Space" });
-    const response = await POST(req as any);
+    const response = await POST(req);
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -187,7 +188,7 @@ describe("/api/build retry loop", () => {
       .mockResolvedValueOnce({ content: makeGenContent(VALID_RESPONSE_JSON) });
 
     const req = makeRequest({ pieces: MINIMAL_PIECES, theme: "Space" });
-    const response = await POST(req as any);
+    const response = await POST(req);
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -207,7 +208,7 @@ describe("/api/build retry loop", () => {
       .mockResolvedValueOnce({ content: makeGenContent(INVALID_OVERLAP_JSON) });
 
     const req = makeRequest({ pieces: MINIMAL_PIECES, theme: "Space" });
-    const response = await POST(req as any);
+    const response = await POST(req);
 
     expect(response.status).toBe(500);
     const body = await response.json();
@@ -226,7 +227,7 @@ describe("/api/build retry loop", () => {
       .mockResolvedValueOnce({ content: makeGenContent(INVALID_OVERLAP_JSON) });
 
     const req1 = makeRequest({ pieces: MINIMAL_PIECES, theme: "Space" });
-    const response1 = await POST(req1 as any);
+    const response1 = await POST(req1);
     expect(response1.status).toBe(500);
 
     // Second request: first attempt succeeds → 200 (counter reset, not using leftover state)
@@ -235,7 +236,7 @@ describe("/api/build retry loop", () => {
       .mockResolvedValueOnce({ content: makeGenContent(VALID_RESPONSE_JSON) });
 
     const req2 = makeRequest({ pieces: MINIMAL_PIECES, theme: "Space" });
-    const response2 = await POST(req2 as any);
+    const response2 = await POST(req2);
     expect(response2.status).toBe(200);
     const body2 = await response2.json();
     expect(body2.suggestions).toBeDefined();
