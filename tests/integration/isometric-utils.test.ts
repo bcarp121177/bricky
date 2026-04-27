@@ -13,6 +13,8 @@ import {
   adjustLightness,
 } from "@/lib/color-utils";
 import { isoProject, brickToPolygons, studCenters } from "@/lib/isometric";
+import { getDims } from "@/lib/ldraw-generator";
+import { sortPlacements, type BrickPlacement } from "@/lib/isometric-step-data";
 
 // ---------------------------------------------------------------------------
 // color-utils.ts
@@ -145,7 +147,7 @@ describe("adjustLightness", () => {
 
 describe("isoProject", () => {
   it("returns a well-defined origin for (0, 0, 0)", () => {
-    const { x, y } = isoProject(0, 0, 0, 24, 20);
+    const { x, y } = isoProject(0, 0, 0, 20);
     expect(isFinite(x)).toBe(true);
     expect(isFinite(y)).toBe(true);
     expect(isNaN(x)).toBe(false);
@@ -153,28 +155,28 @@ describe("isoProject", () => {
   });
 
   it("increasing col shifts x right (positive) and y down (positive)", () => {
-    const a = isoProject(0, 0, 0, 24, 20);
-    const b = isoProject(1, 0, 0, 24, 20);
+    const a = isoProject(0, 0, 0, 20);
+    const b = isoProject(1, 0, 0, 20);
     expect(b.x).toBeGreaterThan(a.x);
     expect(b.y).toBeGreaterThan(a.y);
   });
 
   it("increasing row shifts x left (negative) and y down (positive)", () => {
-    const a = isoProject(0, 0, 0, 24, 20);
-    const b = isoProject(0, 1, 0, 24, 20);
+    const a = isoProject(0, 0, 0, 20);
+    const b = isoProject(0, 1, 0, 20);
     expect(b.x).toBeLessThan(a.x);
     expect(b.y).toBeGreaterThan(a.y);
   });
 
   it("increasing layer shifts y upward (negative)", () => {
-    const a = isoProject(0, 0, 0, 24, 20);
-    const b = isoProject(0, 0, 1, 24, 20);
+    const a = isoProject(0, 0, 0, 20);
+    const b = isoProject(0, 0, 1, 20);
     expect(b.y).toBeLessThan(a.y);
     expect(b.x).toBeCloseTo(a.x, 5);
   });
 
   it("produces no NaN for large coordinates", () => {
-    const { x, y } = isoProject(10, 8, 5, 24, 28);
+    const { x, y } = isoProject(10, 8, 5, 28);
     expect(isNaN(x)).toBe(false);
     expect(isNaN(y)).toBe(false);
   });
@@ -221,22 +223,22 @@ describe("brickToPolygons", () => {
 
 describe("studCenters", () => {
   it("returns exactly 1 center for a 1x1 brick", () => {
-    const centers = studCenters(0, 0, 0, 1, 1, 24, 20);
+    const centers = studCenters(0, 0, 0, 1, 1, 20);
     expect(centers).toHaveLength(1);
   });
 
   it("returns exactly 4 centers for a 2x2 brick", () => {
-    const centers = studCenters(0, 0, 0, 2, 2, 24, 20);
+    const centers = studCenters(0, 0, 0, 2, 2, 20);
     expect(centers).toHaveLength(4);
   });
 
   it("returns exactly 8 centers for a 2x4 brick", () => {
-    const centers = studCenters(0, 0, 0, 2, 4, 24, 20);
+    const centers = studCenters(0, 0, 0, 2, 4, 20);
     expect(centers).toHaveLength(8);
   });
 
   it("all center coordinates are finite and not NaN", () => {
-    const centers = studCenters(0, 0, 0, 4, 2, 24, 28);
+    const centers = studCenters(0, 0, 0, 4, 2, 28);
     for (const { cx, cy } of centers) {
       expect(isNaN(cx)).toBe(false);
       expect(isNaN(cy)).toBe(false);
@@ -246,13 +248,58 @@ describe("studCenters", () => {
   });
 
   it("centers spread across a larger x-range for wider bricks", () => {
-    const narrow = studCenters(0, 0, 0, 1, 1, 24, 20);
-    const wide = studCenters(0, 0, 0, 4, 1, 24, 20);
+    const narrow = studCenters(0, 0, 0, 1, 1, 20);
+    const wide = studCenters(0, 0, 0, 4, 1, 20);
     const narrowXs = narrow.map((c) => c.cx);
     const wideXs = wide.map((c) => c.cx);
     expect(Math.max(...wideXs) - Math.min(...wideXs)).toBeGreaterThan(
       Math.max(...narrowXs) - Math.min(...narrowXs)
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getDims — rotation swap
+// ---------------------------------------------------------------------------
+
+describe("getDims — rotation swap", () => {
+  it("getDims('3004', 90) returns { w: 1, d: 2 } (1x2 brick at 0° is w:2,d:1; rotated 90° swaps to w:1,d:2)", () => {
+    const dims = getDims("3004", 90);
+    expect(dims.w).toBe(1);
+    expect(dims.d).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sortPlacements — painter's algorithm
+// ---------------------------------------------------------------------------
+
+describe("sortPlacements — painter's algorithm", () => {
+  it("sorts layer ASC, row DESC, col ASC", () => {
+    const fixture: BrickPlacement[] = [
+      { col: 2, row: 1, layer: 2, rotation: 0, partNum: "3005", colorHex: "#FF0000", isCurrent: false },
+      { col: 0, row: 3, layer: 0, rotation: 0, partNum: "3005", colorHex: "#0000FF", isCurrent: false },
+      { col: 1, row: 3, layer: 1, rotation: 0, partNum: "3005", colorHex: "#00FF00", isCurrent: false },
+      { col: 0, row: 1, layer: 2, rotation: 0, partNum: "3005", colorHex: "#FFFF00", isCurrent: true  },
+      { col: 3, row: 2, layer: 0, rotation: 0, partNum: "3005", colorHex: "#FF00FF", isCurrent: false },
+    ];
+
+    const sorted = sortPlacements(fixture);
+
+    // Layer 0 comes before layer 1 before layer 2
+    expect(sorted[0].layer).toBe(0);
+    expect(sorted[1].layer).toBe(0);
+    expect(sorted[2].layer).toBe(1);
+    expect(sorted[3].layer).toBe(2);
+    expect(sorted[4].layer).toBe(2);
+
+    // Within layer 0: row DESC (row=3 before row=2)
+    expect(sorted[0].row).toBe(3);
+    expect(sorted[1].row).toBe(2);
+
+    // Within layer 2: row DESC then col ASC — both have row=1, so col ASC (0 before 2)
+    expect(sorted[3].col).toBe(0);
+    expect(sorted[4].col).toBe(2);
   });
 });
 

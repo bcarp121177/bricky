@@ -9,21 +9,23 @@
  * Isometric axes (2:1 pixel ratio, camera above-right):
  *   +col  → SVG (+scale/2, +scale/4)
  *   +row  → SVG (-scale/2, +scale/4)
- *   +layer → SVG (0, -layerH/20 * scale)   [layerH in LDU; 1 stud = 20 LDU]
+ *   +layer → SVG (0, -DEFAULT_LAYER_H/20 * scale)   [layerH in LDU; 1 stud = 20 LDU]
  *
  * scale: SVG pixels per stud.
  */
+
+/** Default layer height in LDU (standard brick = 24 LDU, plate = 8 LDU). */
+export const DEFAULT_LAYER_H = 24;
 
 /** Project a single stud-grid point to SVG canvas coordinates. */
 export function isoProject(
   col: number,
   row: number,
   layer: number,
-  layerH: number,
   scale: number
 ): { x: number; y: number } {
   const x = (col - row) * (scale / 2);
-  const y = (col + row) * (scale / 4) - (layer * layerH * scale) / 20;
+  const y = (col + row) * (scale / 4) - (layer * DEFAULT_LAYER_H * scale) / 20;
   return { x, y };
 }
 
@@ -87,14 +89,13 @@ export function studCenters(
   layer: number,
   w: number,
   d: number,
-  layerH: number,
   scale: number
 ): Array<{ cx: number; cy: number }> {
   const centers: Array<{ cx: number; cy: number }> = [];
   for (let dc = 0; dc < w; dc++) {
     for (let dr = 0; dr < d; dr++) {
       // Center of each stud: offset by 0.5 stud in col and row
-      const { x, y } = project(col + dc + 0.5, row + dr + 0.5, layer + 1, layerH, scale);
+      const { x, y } = project(col + dc + 0.5, row + dr + 0.5, layer + 1, DEFAULT_LAYER_H, scale);
       centers.push({ cx: x, cy: y });
     }
   }
@@ -112,7 +113,9 @@ function project(
   layerH: number,
   scale: number
 ): { x: number; y: number } {
-  return isoProject(col, row, layer, layerH, scale);
+  const x = (col - row) * (scale / 2);
+  const y = (col + row) * (scale / 4) - (layer * layerH * scale) / 20;
+  return { x, y };
 }
 
 function pts(points: Array<{ x: number; y: number }>): string {
