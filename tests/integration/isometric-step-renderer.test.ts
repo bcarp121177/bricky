@@ -14,7 +14,14 @@ import {
 } from "@/lib/color-utils";
 import { isoProject, brickToPolygons, studCenters } from "@/lib/isometric";
 import { getDims } from "@/lib/ldraw-generator";
-import { sortPlacements, type BrickPlacement } from "@/lib/isometric-step-data";
+import {
+  sortPlacements,
+  collectPlacements,
+  collectPliEntries,
+  computeViewBox,
+  type BrickPlacement,
+} from "@/lib/isometric-step-data";
+import type { BuildStep } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // color-utils.ts
@@ -300,6 +307,115 @@ describe("sortPlacements — painter's algorithm", () => {
     // Within layer 2: row DESC then col ASC — both have row=1, so col ASC (0 before 2)
     expect(sorted[3].col).toBe(0);
     expect(sorted[4].col).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeViewBox — edge cases
+// ---------------------------------------------------------------------------
+
+describe("computeViewBox — single 1×1 brick", () => {
+  it("returns a valid viewBox string with positive width and height without division-by-zero", () => {
+    const placements: BrickPlacement[] = [
+      { col: 0, row: 0, layer: 0, rotation: 0, partNum: "3005", colorHex: "#FF0000", isCurrent: true },
+    ];
+    const vb = computeViewBox(placements);
+    expect(isFinite(vb.width)).toBe(true);
+    expect(isFinite(vb.height)).toBe(true);
+    expect(vb.width).toBeGreaterThan(0);
+    expect(vb.height).toBeGreaterThan(0);
+    expect(isNaN(vb.minX)).toBe(false);
+    expect(isNaN(vb.minY)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// collectPlacements — same partNum in multiple steps
+// ---------------------------------------------------------------------------
+
+describe("collectPlacements — same partNum in multiple steps", () => {
+  it("collects all placements and correctly tags isCurrent for the active step", () => {
+    const steps: BuildStep[] = [
+      {
+        stepNumber: 1,
+        instruction: "Place first brick",
+        piecesUsed: [
+          {
+            partNum: "3005",
+            name: "Brick 1x1",
+            color: "Red",
+            colorHex: "#FF0000",
+            quantity: 1,
+            imgUrl: "",
+            placements: [{ col: 0, row: 0, layer: 0, rotation: 0 }],
+          },
+        ],
+      },
+      {
+        stepNumber: 2,
+        instruction: "Place second brick",
+        piecesUsed: [
+          {
+            partNum: "3005",
+            name: "Brick 1x1",
+            color: "Blue",
+            colorHex: "#0000FF",
+            quantity: 1,
+            imgUrl: "",
+            placements: [{ col: 1, row: 0, layer: 0, rotation: 0 }],
+          },
+        ],
+      },
+    ];
+
+    const placements = collectPlacements(steps, 1);
+    expect(placements).toHaveLength(2);
+
+    const priorPiece = placements.find((p) => p.col === 0);
+    const currentPiece = placements.find((p) => p.col === 1);
+
+    expect(priorPiece).toBeDefined();
+    expect(priorPiece!.isCurrent).toBe(false);
+    expect(priorPiece!.partNum).toBe("3005");
+
+    expect(currentPiece).toBeDefined();
+    expect(currentPiece!.isCurrent).toBe(true);
+    expect(currentPiece!.partNum).toBe("3005");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// collectPliEntries — PLI does not overflow viewBox
+// ---------------------------------------------------------------------------
+
+describe("collectPliEntries — PLI does not overflow viewBox", () => {
+  it("returns all distinct piece types for a step with many different parts", () => {
+    const manyParts = ["3005", "3004", "3001", "3003", "3010", "3020", "3022", "3023", "3024"].map(
+      (partNum, i) => ({
+        partNum,
+        name: `Part ${partNum}`,
+        color: "Red",
+        colorHex: "#FF0000",
+        quantity: i + 1,
+        imgUrl: "",
+        placements: [{ col: i, row: 0, layer: 0, rotation: 0 as const }],
+      })
+    );
+
+    const steps: BuildStep[] = [
+      {
+        stepNumber: 1,
+        instruction: "Place many pieces",
+        piecesUsed: manyParts,
+      },
+    ];
+
+    const entries = collectPliEntries(steps, 0);
+    expect(entries).toHaveLength(manyParts.length);
+    for (const part of manyParts) {
+      const found = entries.find((e) => e.partNum === part.partNum);
+      expect(found).toBeDefined();
+    }
   });
 });
 

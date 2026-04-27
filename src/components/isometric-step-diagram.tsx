@@ -31,8 +31,6 @@ const FALLBACK_COLOR = "#C0C0C0";
 // Types
 // ---------------------------------------------------------------------------
 
-export type { BrickPlacement };
-
 export type IsometricStepDiagramProps = {
   /** All steps up to and including the current step. */
   steps: BuildStep[];
@@ -66,7 +64,7 @@ function BrickSvg({ p }: { p: BrickPlacement }): React.ReactElement {
   const { top, leftFront, rightFront } = brickToPolygons(
     p.col, p.row, p.layer, dims.w, dims.d, layerH, SCALE
   );
-  const studs = studCenters(p.col, p.row, p.layer, dims.w, dims.d, SCALE);
+  const studs = studCenters(p.col, p.row, p.layer, dims.w, dims.d, SCALE, layerH);
   const stroke = p.isCurrent ? "#000000" : "none";
   const strokeW = p.isCurrent ? 1 : 0;
   const brickKey = `${p.col}-${p.row}-${p.layer}-${p.partNum}`;

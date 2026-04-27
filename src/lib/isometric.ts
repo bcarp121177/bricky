@@ -89,13 +89,14 @@ export function studCenters(
   layer: number,
   w: number,
   d: number,
-  scale: number
+  scale: number,
+  layerH = DEFAULT_LAYER_H
 ): Array<{ cx: number; cy: number }> {
   const centers: Array<{ cx: number; cy: number }> = [];
   for (let dc = 0; dc < w; dc++) {
     for (let dr = 0; dr < d; dr++) {
       // Center of each stud: offset by 0.5 stud in col and row
-      const { x, y } = project(col + dc + 0.5, row + dr + 0.5, layer + 1, DEFAULT_LAYER_H, scale);
+      const { x, y } = project(col + dc + 0.5, row + dr + 0.5, layer + 1, layerH, scale);
       centers.push({ cx: x, cy: y });
     }
   }
