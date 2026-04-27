@@ -12,7 +12,7 @@ import BrickShelf from "@/components/brick-shelf";
 import MysteryPieceScanner from "@/components/camera-upload";
 import ThemePicker from "@/components/theme-picker";
 import BuildSelection from "@/components/build-selection";
-import BuildInstructions from "@/components/build-instructions";
+import { BuildInstructions } from "@/components/build-instructions";
 import LoadingState from "@/components/loading-state";
 import Confetti from "@/components/confetti";
 import WelcomeScreen from "@/components/welcome-screen";

@@ -24,7 +24,7 @@ interface BuildInstructionsProps {
   onComplete: () => void;
 }
 
-export default function BuildInstructions({
+export function BuildInstructions({
   suggestion,
   onReset,
   onBack,
@@ -71,7 +71,7 @@ export default function BuildInstructions({
           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${DIFFICULTY_COLORS[suggestion.difficulty] ?? "bg-gray-100 text-gray-700"}`}>
             {DIFFICULTY_LABELS[suggestion.difficulty] ?? `Level ${suggestion.difficulty}`}
           </span>
-          <span className="text-xs text-gray-400">~{suggestion.estimatedTime}</span>
+          <span className="text-xs text-gray-600">~{suggestion.estimatedTime}</span>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export default function BuildInstructions({
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-center text-xs text-gray-400 mt-1">
+        <p className="text-center text-xs text-gray-600 mt-1">
           Step {currentStep + 1} of {totalSteps}
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function BuildInstructions({
         {/* Parts for this step */}
         {step.piecesUsed && step.piecesUsed.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">
+            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 px-1">
               Pieces for this step
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -132,8 +132,7 @@ export default function BuildInstructions({
         </button>
         <button
           onClick={goNext}
-          style={{ flex: 1 }}
-          className={`py-2.5 rounded-full font-bold text-base transition-all active:scale-95 ${
+          className={`flex-1 py-2.5 rounded-full font-bold text-base transition-all active:scale-95 ${
             isLastStep
               ? "bg-green-500 text-white hover:bg-green-600"
               : "bg-gray-900 text-white hover:bg-gray-700"
@@ -163,7 +162,7 @@ export default function BuildInstructions({
       <div className="text-center">
         <button
           onClick={onReset}
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
         >
           Start over
         </button>
@@ -201,8 +200,7 @@ function PieceCard({ piece }: { piece: BuildStep["piecesUsed"][number] }) {
             </div>
           )}
           <div
-            className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white shadow"
-            style={{ backgroundColor: "#111" }}
+            className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white shadow bg-gray-900"
           >
             {piece.quantity}
           </div>
