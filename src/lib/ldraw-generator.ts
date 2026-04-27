@@ -5,14 +5,14 @@ import type { BuildStep } from "./types";
 // For plates/tiles the height is 8 LDU; for bricks it is 24 LDU.
 // ---------------------------------------------------------------------------
 
-interface PartDimensions {
+export interface PartDimensions {
   w: number;   // stud width  (X axis at rotation=0)
   d: number;   // stud depth  (Z axis at rotation=0)
   /** layer height in LDU — 24 for bricks, 8 for plates/tiles */
   layerH: number;
 }
 
-const PART_DIMS: Record<string, PartDimensions> = {
+export const PART_DIMS: Record<string, PartDimensions> = {
   // Bricks (24 LDU tall)
   "3001":  { w: 4, d: 2, layerH: 24 }, // Brick 2x4
   "3003":  { w: 2, d: 2, layerH: 24 }, // Brick 2x2
@@ -49,9 +49,9 @@ const PART_DIMS: Record<string, PartDimensions> = {
 };
 
 /** Fallback dimensions for unknown part numbers. */
-const DEFAULT_DIMS: PartDimensions = { w: 2, d: 2, layerH: 24 };
+export const DEFAULT_DIMS: PartDimensions = { w: 2, d: 2, layerH: 24 };
 
-function getDims(partNum: string, rotation: 0 | 90 | 180 | 270): PartDimensions {
+export function getDims(partNum: string, rotation: 0 | 90 | 180 | 270): PartDimensions {
   const base = PART_DIMS[partNum] ?? DEFAULT_DIMS;
   // When rotated 90° or 270°, W and D are swapped.
   if (rotation === 90 || rotation === 270) {
