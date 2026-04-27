@@ -1,172 +1,299 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import CameraUpload from "@/components/camera-upload";
+import type { Theme, InventoryPiece, BuildResponse, BuildSuggestion } from "@/lib/types";
+import { LEGO_COLORS, type LegoColor } from "@/lib/lego-colors";
+
+import { useInventory } from "@/hooks/use-inventory";
+
+import ColorSelection from "@/components/color-selection";
+import PieceBrowser from "@/components/piece-browser";
+import BrickShelf from "@/components/brick-shelf";
+import MysteryPieceScanner from "@/components/camera-upload";
+import ThemePicker from "@/components/theme-picker";
+import BuildSelection from "@/components/build-selection";
 import BuildInstructions from "@/components/build-instructions";
 import LoadingState from "@/components/loading-state";
+import Confetti from "@/components/confetti";
+import WelcomeScreen from "@/components/welcome-screen";
+import DoneScreen from "@/components/done-screen";
+import ErrorScreen from "@/components/error-screen";
 
-type AppState = "idle" | "loading" | "results" | "error";
+/**
+ * 8-screen state machine:
+ *   welcome → inventory → theme → loading → pick → build → done → (back to welcome)
+ *
+ * Additional overlay: scan (modal, can open from inventory screen)
+ */
+type Screen =
+  | "welcome"
+  | "inventory"
+  | "theme"
+  | "loading"
+  | "pick"
+  | "build"
+  | "done"
+  | "error";
 
 export default function Home() {
-  const [state, setState] = useState<AppState>("idle");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string>("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [screen, setScreen] = useState<Screen>("welcome");
+  const [selectedColor, setSelectedColor] = useState<LegoColor>(
+    LEGO_COLORS.find((c) => c.name === "Bright Red") ?? LEGO_COLORS[0]
+  );
+  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
+  const [buildResponse, setBuildResponse] = useState<BuildResponse | null>(null);
+  const [chosenSuggestion, setChosenSuggestion] = useState<BuildSuggestion | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showScanner, setShowScanner] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  const handleImageCapture = useCallback((file: File) => {
-    setImageFile(file);
-  }, []);
+  const { inventory, pieces, totalCount, addPiece, removePiece, setQuantity, clearInventory } =
+    useInventory();
 
-  const handleAnalyze = async () => {
-    if (!imageFile) return;
+  // ── Navigation helpers ─────────────────────────────────────────────────────
 
-    setState("loading");
-    setError("");
+  const goToInventory = () => setScreen("inventory");
+  const goToTheme = () => {
+    if (pieces.length === 0) return;
+    setScreen("theme");
+  };
+  const goToBuild = useCallback(async () => {
+    if (!selectedTheme) return;
+    setScreen("loading");
+    setErrorMessage("");
 
     try {
-      const formData = new FormData();
-      formData.append("image", imageFile);
-
-      const response = await fetch("/api/analyze", {
+      const body = { pieces, theme: selectedTheme };
+      const res = await fetch("/api/build", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(
-          errData.error || `Analysis failed (${response.status})`
-        );
+      if (!res.ok) {
+        const errData: unknown = await res.json().catch(() => ({}));
+        const msg =
+          typeof errData === "object" &&
+          errData !== null &&
+          "error" in errData
+            ? String((errData as Record<string, unknown>).error)
+            : `Build failed (${res.status})`;
+        throw new Error(msg);
       }
 
-      const data = await response.json();
-      setResult(data);
-      setState("results");
+      const data: BuildResponse = await res.json();
+      setBuildResponse(data);
+      setScreen("pick");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Something went wrong"
-      );
-      setState("error");
+      setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
+      setScreen("error");
     }
+  }, [pieces, selectedTheme]);
+
+  const handleSelectSuggestion = (suggestion: BuildSuggestion) => {
+    setChosenSuggestion(suggestion);
+    setScreen("build");
+  };
+
+  const handleBuildComplete = () => {
+    setShowConfetti(true);
+    setScreen("done");
+    setTimeout(() => setShowConfetti(false), 5000);
   };
 
   const handleReset = () => {
-    setState("idle");
-    setResult(null);
-    setError("");
-    setImageFile(null);
+    clearInventory();
+    setBuildResponse(null);
+    setChosenSuggestion(null);
+    setSelectedTheme(null);
+    setShowConfetti(false);
+    setScreen("welcome");
   };
+
+  const handleBackToPick = () => {
+    setChosenSuggestion(null);
+    setScreen("pick");
+  };
+
+  const handleScannerFound = useCallback(
+    (piece: Omit<InventoryPiece, "quantity">) => {
+      addPiece(piece);
+    },
+    [addPiece]
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col flex-1">
       {/* Header */}
-      <header className="bg-yellow-400 px-4 py-4 shadow-sm">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <div className="text-3xl">🧱</div>
-          <div>
-            <h1 className="text-2xl font-black text-black tracking-tight">
-              Bricky
-            </h1>
-            <p className="text-sm text-black/60 font-medium -mt-0.5">
-              Snap. Identify. Build.
-            </p>
-          </div>
+      <header className="bg-yellow-400 px-4 py-3 shadow-sm sticky top-0 z-40">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-2xl">🧱</span>
+            <div>
+              <h1 className="text-xl font-black text-black tracking-tight leading-none">
+                Bricky
+              </h1>
+              <p className="text-xs text-black/60 font-medium">
+                Build Something Amazing
+              </p>
+            </div>
+          </button>
+
+          {/* Inventory badge */}
+          {totalCount > 0 && screen !== "inventory" && (
+            <button
+              onClick={goToInventory}
+              className="flex items-center gap-1.5 bg-black text-yellow-400 px-3 py-1.5 rounded-full text-sm font-bold hover:bg-gray-800 transition-colors"
+            >
+              <span>🧱</span>
+              <span>{totalCount}</span>
+            </button>
+          )}
         </div>
       </header>
 
+      {/* Confetti overlay */}
+      {showConfetti && <Confetti />}
+
+      {/* Scanner modal */}
+      {showScanner && (
+        <MysteryPieceScanner
+          selectedColor={selectedColor}
+          onFound={handleScannerFound}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
       {/* Main content */}
-      <main className="flex-1 px-4 py-6">
+      <main className="flex-1 px-4 py-6 overflow-y-auto">
         <div className="max-w-2xl mx-auto">
-          {state === "idle" && (
-            <div className="space-y-6">
-              {/* Hero text */}
-              <div className="text-center">
-                <h2 className="text-xl font-bold text-gray-900">
-                  What will you build today?
-                </h2>
-                <p className="text-gray-500 mt-1">
-                  Take a photo of your LEGO pieces and get custom building
-                  instructions
-                </p>
+          {/* ── Screen: welcome ──────────────────────────────────────────── */}
+          {screen === "welcome" && <WelcomeScreen onStart={goToInventory} />}
+
+          {/* ── Screen: inventory ────────────────────────────────────────── */}
+          {screen === "inventory" && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-black text-gray-900">Your Pieces</h2>
+                <button
+                  onClick={() => setShowScanner(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold hover:bg-gray-200 transition-colors"
+                >
+                  <span>📷</span> Scan
+                </button>
               </div>
 
-              {/* Camera/upload */}
-              <CameraUpload onImageCapture={handleImageCapture} />
+              {/* Color picker */}
+              <ColorSelection
+                selected={selectedColor.name}
+                onChange={setSelectedColor}
+              />
 
-              {/* Analyze button */}
-              {imageFile && (
-                <div className="text-center">
-                  <button
-                    onClick={handleAnalyze}
-                    className="px-8 py-3.5 bg-yellow-400 text-black font-bold text-lg rounded-full hover:bg-yellow-500 active:scale-95 transition-all shadow-lg shadow-yellow-400/30"
-                  >
-                    What Can I Build?
-                  </button>
+              {/* Part browser */}
+              <PieceBrowser
+                selectedColor={selectedColor}
+                inventory={inventory}
+                onAdd={addPiece}
+              />
+
+              {/* Shelf */}
+              {pieces.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  <hr className="border-gray-200" />
+                  <BrickShelf
+                    pieces={pieces}
+                    onRemove={removePiece}
+                    onSetQuantity={setQuantity}
+                  />
                 </div>
               )}
 
-              {/* How it works */}
-              <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-                {[
-                  {
-                    icon: "📸",
-                    title: "Snap",
-                    desc: "Photo your loose pieces",
-                  },
-                  {
-                    icon: "🔍",
-                    title: "Identify",
-                    desc: "AI recognizes each brick",
-                  },
-                  {
-                    icon: "📋",
-                    title: "Build",
-                    desc: "Get step-by-step instructions",
-                  },
-                ].map((step) => (
-                  <div key={step.title}>
-                    <div className="text-3xl mb-1">{step.icon}</div>
-                    <div className="font-semibold text-gray-900 text-sm">
-                      {step.title}
-                    </div>
-                    <div className="text-xs text-gray-500">{step.desc}</div>
-                  </div>
-                ))}
+              {/* Next CTA */}
+              <div className="sticky bottom-4 pt-2">
+                <button
+                  onClick={goToTheme}
+                  disabled={pieces.length === 0}
+                  className="w-full py-4 bg-yellow-400 text-black font-black text-lg rounded-full shadow-lg disabled:opacity-40 hover:bg-yellow-500 active:scale-95 transition-all"
+                >
+                  {pieces.length === 0
+                    ? "Add pieces to continue"
+                    : `Pick a Theme (${totalCount} piece${totalCount !== 1 ? "s" : ""}) →`}
+                </button>
               </div>
             </div>
           )}
 
-          {state === "loading" && <LoadingState />}
-
-          {state === "results" && result && (
-            <BuildInstructions
-              result={result}
-              onReset={handleReset}
-            />
-          )}
-
-          {state === "error" && (
-            <div className="text-center py-12 space-y-4">
-              <div className="text-5xl">😕</div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Oops, something went wrong
-              </h2>
-              <p className="text-gray-500">{error}</p>
+          {/* ── Screen: theme ────────────────────────────────────────────── */}
+          {screen === "theme" && (
+            <div className="space-y-5">
               <button
-                onClick={handleReset}
-                className="px-6 py-3 bg-yellow-400 text-black font-semibold rounded-full hover:bg-yellow-500 transition-colors"
+                onClick={goToInventory}
+                className="text-sm text-gray-500 hover:text-gray-700 font-medium"
               >
-                Try Again
+                ← Back to pieces
+              </button>
+
+              <ThemePicker
+                selected={selectedTheme}
+                onChange={setSelectedTheme}
+              />
+
+              <button
+                onClick={goToBuild}
+                disabled={!selectedTheme}
+                className="w-full py-4 bg-yellow-400 text-black font-black text-lg rounded-full shadow-lg disabled:opacity-40 hover:bg-yellow-500 active:scale-95 transition-all"
+              >
+                {selectedTheme ? `Let's Build ${selectedTheme}! →` : "Pick a theme first"}
               </button>
             </div>
           )}
+
+          {/* ── Screen: loading ───────────────────────────────────────────── */}
+          {screen === "loading" && <LoadingState theme={selectedTheme} />}
+
+          {/* ── Screen: pick ──────────────────────────────────────────────── */}
+          {screen === "pick" && buildResponse && (
+            <div className="space-y-5">
+              <button
+                onClick={() => setScreen("theme")}
+                className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+              >
+                ← Change theme
+              </button>
+              <BuildSelection
+                suggestions={buildResponse.suggestions}
+                onSelect={handleSelectSuggestion}
+              />
+            </div>
+          )}
+
+          {/* ── Screen: build ─────────────────────────────────────────────── */}
+          {screen === "build" && chosenSuggestion && (
+            <BuildInstructions
+              suggestion={chosenSuggestion}
+              onReset={handleReset}
+              onBack={handleBackToPick}
+              onComplete={handleBuildComplete}
+            />
+          )}
+
+          {/* ── Screen: done ───────────────────────────────────────────────── */}
+          {screen === "done" && <DoneScreen onBackToPick={handleBackToPick} onReset={handleReset} />}
+
+          {/* ── Screen: error ─────────────────────────────────────────────── */}
+          {screen === "error" && <ErrorScreen message={errorMessage} onRetry={goToBuild} onReset={handleReset} />}
+
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="px-4 py-4 text-center text-xs text-gray-400 border-t border-gray-100">
-        Built with AI — not affiliated with LEGO Group
+      <footer className="px-4 py-3 text-center text-xs text-gray-400 border-t border-gray-100">
+        Built with AI — not affiliated with the LEGO Group
       </footer>
     </div>
   );

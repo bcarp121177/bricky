@@ -1,0 +1,256 @@
+{
+  "suggestions": [
+    {
+      "title": "Little Rocket Ship",
+      "description": "Blast off! Build a red and blue rocket ready to zoom to the stars.",
+      "difficulty": 1,
+      "estimatedTime": "5–8 minutes",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "instruction": "Put two red 2x4 bricks side by side. This is the wide rocket base.",
+          "piecesUsed": [
+            {
+              "partNum": "3001",
+              "name": "Brick 2x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300121.jpg",
+              "placements": [
+                { "col": 4, "row": 0, "layer": 0, "rotation": 0 },
+                { "col": 4, "row": 2, "layer": 0, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 2,
+          "instruction": "Stack four blue 2x2 bricks on top. The rocket body is growing!",
+          "piecesUsed": [
+            {
+              "partNum": "3003",
+              "name": "Brick 2x2",
+              "color": "Bright Blue",
+              "colorHex": "#006CB7",
+              "quantity": 4,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300301.jpg",
+              "placements": [
+                { "col": 4, "row": 0, "layer": 1, "rotation": 0 },
+                { "col": 6, "row": 0, "layer": 1, "rotation": 0 },
+                { "col": 4, "row": 2, "layer": 1, "rotation": 0 },
+                { "col": 6, "row": 2, "layer": 1, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 3,
+          "instruction": "Add two red 1x4 bricks on top to narrow the rocket.",
+          "piecesUsed": [
+            {
+              "partNum": "3010",
+              "name": "Brick 1x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/301001.jpg",
+              "placements": [
+                { "col": 4, "row": 1, "layer": 2, "rotation": 0 },
+                { "col": 4, "row": 2, "layer": 2, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 4,
+          "instruction": "Put one red 1x4 brick on top as the rocket nose!",
+          "piecesUsed": [
+            {
+              "partNum": "3010",
+              "name": "Brick 1x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 1,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/301001.jpg",
+              "placements": [
+                { "col": 4, "row": 1, "layer": 3, "rotation": 0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "tips": [
+        "Press each brick down firmly so it clicks into place.",
+        "Try swapping the blue bricks for green ones for a different look."
+      ]
+    },
+    {
+      "title": "Color Tower",
+      "description": "Stack bricks high in the sky! Make a tall tower with red and blue.",
+      "difficulty": 1,
+      "estimatedTime": "3–5 minutes",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "instruction": "Place two red 2x4 bricks end to end for the base.",
+          "piecesUsed": [
+            {
+              "partNum": "3001",
+              "name": "Brick 2x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300121.jpg",
+              "placements": [
+                { "col": 4, "row": 0, "layer": 0, "rotation": 0 },
+                { "col": 8, "row": 0, "layer": 0, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 2,
+          "instruction": "Put two blue 2x2 bricks on top, side by side.",
+          "piecesUsed": [
+            {
+              "partNum": "3003",
+              "name": "Brick 2x2",
+              "color": "Bright Blue",
+              "colorHex": "#006CB7",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300301.jpg",
+              "placements": [
+                { "col": 5, "row": 0, "layer": 1, "rotation": 0 },
+                { "col": 7, "row": 0, "layer": 1, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 3,
+          "instruction": "Add a red 1x4 brick on top to lock it together.",
+          "piecesUsed": [
+            {
+              "partNum": "3010",
+              "name": "Brick 1x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 1,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/301001.jpg",
+              "placements": [
+                { "col": 5, "row": 0, "layer": 2, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 4,
+          "instruction": "Top it off with two blue 2x2 bricks for the roof.",
+          "piecesUsed": [
+            {
+              "partNum": "3003",
+              "name": "Brick 2x2",
+              "color": "Bright Blue",
+              "colorHex": "#006CB7",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300301.jpg",
+              "placements": [
+                { "col": 5, "row": 0, "layer": 3, "rotation": 0 },
+                { "col": 7, "row": 0, "layer": 3, "rotation": 0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "tips": [
+        "Stagger the bricks like real builders do for extra strength.",
+        "How tall can you make it before it falls?"
+      ]
+    },
+    {
+      "title": "Space Base",
+      "description": "Build a flat space base where rockets can land and take off!",
+      "difficulty": 1,
+      "estimatedTime": "4–6 minutes",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "instruction": "Lay three red 2x4 bricks in a row for the main platform.",
+          "piecesUsed": [
+            {
+              "partNum": "3001",
+              "name": "Brick 2x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 3,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300121.jpg",
+              "placements": [
+                { "col": 2, "row": 0, "layer": 0, "rotation": 0 },
+                { "col": 6, "row": 0, "layer": 0, "rotation": 0 },
+                { "col": 10, "row": 0, "layer": 0, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 2,
+          "instruction": "Add two blue 2x2 bricks on top as control towers.",
+          "piecesUsed": [
+            {
+              "partNum": "3003",
+              "name": "Brick 2x2",
+              "color": "Bright Blue",
+              "colorHex": "#006CB7",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300301.jpg",
+              "placements": [
+                { "col": 2, "row": 0, "layer": 1, "rotation": 0 },
+                { "col": 10, "row": 0, "layer": 1, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 3,
+          "instruction": "Put a red 1x4 brick across the middle platform.",
+          "piecesUsed": [
+            {
+              "partNum": "3010",
+              "name": "Brick 1x4",
+              "color": "Bright Red",
+              "colorHex": "#C91A09",
+              "quantity": 1,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/301001.jpg",
+              "placements": [
+                { "col": 6, "row": 0, "layer": 1, "rotation": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "stepNumber": 4,
+          "instruction": "Stack two blue 2x2 bricks higher on the towers.",
+          "piecesUsed": [
+            {
+              "partNum": "3003",
+              "name": "Brick 2x2",
+              "color": "Bright Blue",
+              "colorHex": "#006CB7",
+              "quantity": 2,
+              "imgUrl": "https://cdn.rebrickable.com/media/parts/elements/300301.jpg",
+              "placements": [
+                { "col": 2, "row": 0, "layer": 2, "rotation": 0 },
+                { "col": 10, "row": 0, "layer": 2, "rotation": 0 }
+              ]
+            }
+          ]
+        }
+      ],
+      "tips": [
+        "Leave the middle open so rockets have room to land.",
+        "Add more bricks to make the base even wider!"
+      ]
+    }
+  ]
+}
